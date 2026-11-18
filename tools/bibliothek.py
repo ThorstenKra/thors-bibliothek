@@ -109,7 +109,7 @@ def rule_suggestions(books, R):
                 if n / an[b["a"]] >= .5: score[t] += 3
         if b["c"] in catdef: score[catdef[b["c"]]] += 2
         head = " ".join([b["t"], b["s"]]); su = b["su"]
-        fiction = b["c"] == "Belletristik"
+        fiction = b["c"] in ("Belletristik", "Science-Fiction")
         for t, rx in RX.items():
             if fiction and t not in fiction_ok: continue
             h = len(rx.findall(head)) * 3 + len(rx.findall(su))

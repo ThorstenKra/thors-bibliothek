@@ -34,5 +34,6 @@ Stand: 18.11.2026. Bei jeder Arbeit aktualisieren.
 - [ ] Artefakt-Katalog bei Claude als Archiv kennzeichnen oder löschen.
 
 ## Erledigt
+- [x] 18.11.: Kategorie Science-Fiction (1.4.0), 160 Bücher per Ergänzung verschoben
 - [x] 18.11.: App 1.0.0–1.3.2 (siehe CHANGELOG), Cover, Kindle-Links, Kindle-Abgleich, eigenes Symbol
 - [x] 16.–18.11.: Übernahme aus BookBuddy und Kindle, Kategorien, Tags, Themen

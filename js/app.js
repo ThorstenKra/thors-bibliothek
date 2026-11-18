@@ -1,11 +1,11 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.4.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
 const PALETTE = {
-  "Belletristik":"#7b3f35","Philosophie":"#2f4b63","Psychologie":"#5b4a7a","Gesellschaft":"#4d6b4f",
+  "Belletristik":"#7b3f35","Science-Fiction":"#3b4290","Philosophie":"#2f4b63","Psychologie":"#5b4a7a","Gesellschaft":"#4d6b4f",
   "Politik & Recht":"#8a5a2b","Geschichte":"#6b5a3a","Religion & Spiritualität":"#6a3e5c","Medizin & Gesundheit":"#2f6b6a",
   "Naturwissenschaft":"#245a7a","Wirtschaft":"#55606b","Musik & Kunst":"#9a4a5a","Bildung & Ratgeber":"#6b7a3a",
   "Biografie":"#7a6a4a","Literaturwissenschaft":"#5a3a3a","Technik & Informatik":"#3a4a6a","Sonstiges":"#6b6560","Ohne Kategorie":"#85807a"
@@ -376,7 +376,7 @@ async function importFile(file, mode, out){
     const obj = JSON.parse(await file.text());
     const res = await Data.importObject(obj, mode);
     if (obj.regeln) await Data.setMeta('regeln', obj.regeln);
-    if (res.ergaenzung) { await Data.log('Ergänzung', `${obj.beschreibung||'Ergänzung'}: ${res.aktualisiert} Bücher ergänzt.`); out.textContent = `Fertig: ${res.aktualisiert} Bücher ergänzt.`; await load(); refreshViews(); return true; }
+    if (res.ergaenzung) { const t = `${res.aktualisiert} Bücher ${res.geaendert ? 'aktualisiert' : 'ergänzt'}` + (res.geaendert ? ` (${res.geaendert} Angaben geändert)` : '') + (res.uebersprungen ? `, ${res.uebersprungen} übersprungen, weil du sie inzwischen anders gesetzt hast` : '') + '.'; await Data.log('Ergänzung', `${obj.beschreibung||'Ergänzung'}: ${t}`); out.textContent = 'Fertig: ' + t; await load(); refreshViews(); return true; }
     await Data.log('Sicherung', `${mode==='replace'?'Bibliothek ersetzt durch':'Zusammengeführt mit'} Sicherung vom ${fmtDate(obj.exportiert)} (${obj.geraet||'?'}): ${res.neu} neu, ${res.aktualisiert} aktualisiert.`);
     await Data.setMeta('initialisiert', true);
     out.textContent = `Fertig: ${res.neu} Bücher neu, ${res.aktualisiert} aktualisiert.`;

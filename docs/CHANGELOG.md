@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## 1.4.0 – 18.11.2026
+- Neue Kategorie **Science-Fiction** (eigene Farbe). Bisher gab es Science Fiction nur als Tag
+  innerhalb von Belletristik.
+- Ergänzungsdateien können mit `aendern` gefüllte Felder gezielt umstellen – nur, wenn der alte
+  Wert noch unverändert ist; jede Änderung landet in der Änderungsliste.
+- Ergänzung `bibliothek-science-fiction.json`: 160 Bücher von Belletristik nach Science-Fiction
+  (alle mit Tag „Science Fiction“ plus eindeutige SF-Titel ohne Tag, z. B. Lem, Asimov, Liu).
+
 ## 1.3.3 – 18.11.2026
 - Ergänzungsdateien füllen auch leere Listen und die Kategorie „Ohne Kategorie“ – damit lassen
   sich neue Kindle-Bücher per Ergänzung einordnen.

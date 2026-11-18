@@ -30,10 +30,11 @@ ist aber für den Betrieb nicht nötig.
 - **Abgleich über iCloud-Datei statt Datenbank-Dienst** (Supabase o. Ä. verworfen): genügt für
   einen Nutzer, keine Zusatzkosten, keine weitere Abhängigkeit.
 - **Repository öffentlich, Daten privat**: nötig für kostenloses GitHub Pages; Bücherdaten nie im Repo.
-- **Kategorien**: 15 deutsche Kategorien (Belletristik, Philosophie, Psychologie, Gesellschaft,
+- **Kategorien**: 16 deutsche Kategorien (Belletristik, Science-Fiction, Philosophie, Psychologie, Gesellschaft,
   Politik & Recht, Geschichte, Religion & Spiritualität, Medizin & Gesundheit, Naturwissenschaft,
   Wirtschaft, Musik & Kunst, Bildung & Ratgeber, Biografie, Literaturwissenschaft,
-  Technik & Informatik) plus „Ohne Kategorie“.
+  Technik & Informatik) plus „Ohne Kategorie“. Science-Fiction seit 1.4.0 als eigene Kategorie
+  (vorher nur Tag innerhalb Belletristik); Fantasy und Horror bleiben unter Belletristik.
 - **Drei Arten von Schlagworten**: `tg` = Thors eigene Tags, `ts` = regelbasierte Vorschläge
   (aus Autor, Kategorie, Stichwörtern), `tt` = inhaltliche Themen für Belletristik (von Claude
   einzeln vergeben, z. B. Identität, Liebe, Tod, Macht, Diktatur, Realität, Sinnsuche, Phantastik).

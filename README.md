@@ -82,6 +82,9 @@ Die CSV-Ausgabe enthält dieselben Felder mit lesbaren Spaltennamen.
 **Ergänzungsdateien** (`"typ": "ergaenzung"`, Feld `felder`: `{ id: { feld: wert } }`) füllen nur
 leere Felder vorhandener Bücher (auch Listen ohne Einträge und die Kategorie „Ohne Kategorie“) und lassen eigene Änderungen unberührt. Sie werden wie eine
 Sicherung über „Sicherung zusammenführen“ geladen.
+Optional ändert der Abschnitt `aendern` (`{ id: { feld: { "von": alt, "nach": neu } } }`) gezielt
+gefüllte Felder – aber nur, wenn das Feld noch genau den Wert `von` hat; selbst geänderte Bücher
+werden übersprungen. Jede Änderung erscheint in der Änderungsliste.
 
 ## Aufbau
 - `index.html`, `css/` – Oberfläche

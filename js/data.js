@@ -101,19 +101,34 @@ const Data = {
     return { neu, aktualisiert, gesamt: obj.buecher.length };
   },
 
-  // Ergänzungsdatei: füllt nur leere Felder vorhandener Bücher (eigene Änderungen bleiben unberührt)
+  // Ergänzungsdatei: füllt nur leere Felder vorhandener Bücher (eigene Änderungen bleiben unberührt).
+  // Optional „aendern“: { id: { feld: { von, nach } } } ändert ein gefülltes Feld gezielt – aber nur,
+  // wenn es noch genau den Wert „von“ hat. Hat Thor das Feld inzwischen selbst geändert, bleibt es.
   async importSupplement(obj) {
     const books = await Data.allBooks(); const byId = new Map(books.map(b => [b.id, b]));
-    const put = []; const now = Data.now();
+    const put = new Map(); const now = Data.now(); const same = (x, y) => JSON.stringify(x ?? '') === JSON.stringify(y ?? '');
+    let geaendert = 0, uebersprungen = 0;
     for (const [id, fields] of Object.entries(obj.felder || {})) {
-      const b = byId.get(id); if (!b) continue;
+      const b = byId.get(id); if (!b || b.del) continue;
       let ch = false;
       // leer = nicht gesetzt; „Ohne Kategorie“ zählt bei der Kategorie ebenfalls als leer
       for (const [k, v] of Object.entries(fields)) if (v && (!b[k] || (Array.isArray(b[k]) && !b[k].length) || (k === 'c' && b[k] === 'Ohne Kategorie'))) { b[k] = v; ch = true; }
-      if (ch) { b.u = now; put.push(b); }
+      if (ch) { b.u = now; put.set(id, b); }
     }
-    await Data.putBooks(put);
-    return { neu: 0, aktualisiert: put.length, gesamt: Object.keys(obj.felder || {}).length, ergaenzung: true };
+    const NAMES = { c: 'Kategorie', st: 'Status', fm: 'Format', tg: 'Tags', tt: 'Themen' };
+    for (const [id, fields] of Object.entries(obj.aendern || {})) {
+      const b = byId.get(id); if (!b || b.del) continue;
+      for (const [k, d] of Object.entries(fields)) {
+        if (!d || !('nach' in d)) continue;
+        if (same(b[k], d.nach)) continue;               // schon erledigt (Datei zweimal geladen)
+        if (!same(b[k], d.von)) { uebersprungen++; continue; } // inzwischen selbst geändert
+        b[k] = d.nach; b.u = now; put.set(id, b); geaendert++;
+        const fmt = v => Array.isArray(v) ? v.join(', ') : (v ?? '—');
+        await Data.logChange(['Bearbeitet', b.t, b.a, `${NAMES[k] || k}: ${fmt(d.von)} → ${fmt(d.nach)} (Ergänzung)`, Data.today()]);
+      }
+    }
+    await Data.putBooks([...put.values()]);
+    return { neu: 0, aktualisiert: put.size, geaendert, uebersprungen, gesamt: Object.keys(obj.felder || {}).length + Object.keys(obj.aendern || {}).length, ergaenzung: true };
   },
 
   // CSV im Stil des BookBuddy-Exports (lesbar in Numbers/Excel)

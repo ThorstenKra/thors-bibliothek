@@ -1,5 +1,5 @@
 // Service Worker: hält die App offline verfügbar. Bei neuer Version CACHE hochzählen.
-const CACHE = 'thors-bibliothek-v1.3.3';
+const CACHE = 'thors-bibliothek-v1.4.0';
 const COVERS = 'thors-bibliothek-cover'; // bleibt über App-Versionen erhalten
 const FILES = ['./', 'index.html', 'css/app.css', 'css/app2.css', 'js/data.js', 'js/isbn.js', 'js/map.js', 'js/kindle.js', 'js/app.js',
   'vendor/d3.min.js', 'vendor/zxing.min.js', 'vendor/jszip.min.js', 'manifest.webmanifest', 'icons/icon-192-v2.png', 'icons/icon-512-v2.png', 'icons/apple-touch-icon-v2.png'];

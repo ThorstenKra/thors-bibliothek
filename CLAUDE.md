@@ -37,9 +37,9 @@ Lies vor jeder Arbeit `docs/ROADMAP.md` (offene Aufgaben) und bei Bedarf `docs/P
 - Immer von seiner **aktuellen Sicherung** ausgehen (Datei hochladen lassen), nicht von alten Ständen.
 - Ergebnis als Ergänzungsdatei: `{"format":"thors-bibliothek","version":1,"typ":"ergaenzung",
   "beschreibung":"…","felder":{ "<id>": { "<feld>": <wert> } }}` – füllt nur leere Felder
-  (auch leere Listen und Kategorie „Ohne Kategorie“). Für Änderungen an bereits gefüllten Feldern eine Sicherung mit
-  neuerem `u` erzeugen oder das Format bewusst erweitern und dokumentieren.
-- Kategorien: die 15 Kategorien aus `js/app.js` (`PALETTE`); Themen-Vokabular siehe `docs/PROJEKT.md`.
+  (auch leere Listen und Kategorie „Ohne Kategorie“). Für Änderungen an bereits gefüllten Feldern den Abschnitt
+  `aendern` nutzen (`{ id: { feld: { "von": alt, "nach": neu } } }`, greift nur bei unverändertem Wert).
+- Kategorien: die 16 Kategorien aus `js/app.js` (`PALETTE`); Themen-Vokabular siehe `docs/PROJEKT.md`.
 - Werkzeuge der Erstübernahme liegen in `tools/` (Python, nur noch für Sonderfälle).
 
 ## Commits
