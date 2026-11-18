@@ -1,5 +1,5 @@
 // Service Worker: hält die App offline verfügbar. Bei neuer Version CACHE hochzählen.
-const CACHE = 'thors-bibliothek-v1.2.1';
+const CACHE = 'thors-bibliothek-v1.2.2';
 const COVERS = 'thors-bibliothek-cover'; // bleibt über App-Versionen erhalten
 const FILES = ['./', 'index.html', 'css/app.css', 'css/app2.css', 'js/data.js', 'js/isbn.js', 'js/map.js', 'js/app.js',
   'vendor/d3.min.js', 'vendor/zxing.min.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
@@ -23,7 +23,9 @@ self.addEventListener('fetch', e => {
   }
   if (url.origin !== location.origin) return; // ISBN-Abfragen gehen direkt ins Netz
   // App-Dateien: zuerst Netz (für Updates), sonst Cache (offline)
-  e.respondWith(fetch(e.request).then(r => {
+  // no-cache: am Server nachfragen statt die 10-Minuten-Zwischenspeicherung von GitHub Pages zu nutzen
+  const req = e.request.mode === 'navigate' ? fetch(e.request.url, { cache: 'no-cache' }) : fetch(e.request, { cache: 'no-cache' });
+  e.respondWith(req.then(r => {
     if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
     return r;
   }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('index.html'))));

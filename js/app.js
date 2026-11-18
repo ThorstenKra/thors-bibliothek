@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -363,6 +363,11 @@ async function buildData(){
   $('version').textContent = 'Version ' + APP_VERSION;
 }
 $('expJson').onclick = backupJSON;
+$('updBtn').onclick = async ()=>{
+  toast('Suche nach Update …');
+  try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch(e){}
+  setTimeout(()=>location.reload(), 1200);
+};
 $('expCsv').onclick = async ()=>{ const r = await Data.saveFile(`bibliothek-${Data.today()}.csv`, await Data.exportCSV(), 'text/csv'); if (r!=='abgebrochen') toast('Tabelle exportiert'); };
 async function importFile(file, mode, out){
   try {
