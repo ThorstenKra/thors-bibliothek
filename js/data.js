@@ -115,7 +115,7 @@ const Data = {
       for (const [k, v] of Object.entries(fields)) if (v && (!b[k] || (Array.isArray(b[k]) && !b[k].length) || (k === 'c' && b[k] === 'Ohne Kategorie'))) { b[k] = v; ch = true; }
       if (ch) { b.u = now; put.set(id, b); }
     }
-    const NAMES = { c: 'Kategorie', st: 'Status', fm: 'Format', tg: 'Tags', tt: 'Themen' };
+    const NAMES = { c: 'Kategorie', a: 'Autor', ue: 'Übersetzer/Hrsg.', st: 'Status', fm: 'Format', tg: 'Tags', tt: 'Themen', kd: 'Auch auf Kindle', ka: 'Kindle-ASIN', kdf: 'Auf Kindle beendet', km: 'Kindle-Markierungen', kn: 'Kindle-Notizen', del: 'Gelöscht' };
     for (const [id, fields] of Object.entries(obj.aendern || {})) {
       const b = byId.get(id); if (!b || b.del) continue;
       for (const [k, d] of Object.entries(fields)) {
@@ -123,8 +123,8 @@ const Data = {
         if (same(b[k], d.nach)) continue;               // schon erledigt (Datei zweimal geladen)
         if (!same(b[k], d.von)) { uebersprungen++; continue; } // inzwischen selbst geändert
         b[k] = d.nach; b.u = now; put.set(id, b); geaendert++;
-        const fmt = v => Array.isArray(v) ? v.join(', ') : (v ?? '—');
-        await Data.logChange(['Bearbeitet', b.t, b.a, `${NAMES[k] || k}: ${fmt(d.von)} → ${fmt(d.nach)} (Ergänzung)`, Data.today()]);
+        const fmt = v => Array.isArray(v) ? (v.length ? v.length + ' Einträge' : '—') : v === true || v === 1 ? 'ja' : (v === '' || v == null ? '—' : v);
+        await Data.logChange(k === 'del' ? ['Gelöscht', b.t, b.a, 'gelöscht (Ergänzung)', Data.today()] : ['Bearbeitet', b.t, b.a, `${NAMES[k] || k}: ${fmt(d.von)} → ${fmt(d.nach)} (Ergänzung)`, Data.today()]);
       }
     }
     await Data.putBooks([...put.values()]);
@@ -133,7 +133,7 @@ const Data = {
 
   // CSV im Stil des BookBuddy-Exports (lesbar in Numbers/Excel)
   async exportCSV() {
-    const cols = [['Title', 't'], ['Subtitle', 's'], ['Author', 'a'], ['Publisher', 'p'], ['Year Published', 'y'],
+    const cols = [['Title', 't'], ['Subtitle', 's'], ['Author', 'a'], ['Übersetzer/Herausgeber', 'ue'], ['Publisher', 'p'], ['Year Published', 'y'],
       ['Kategorie', 'c'], ['Genre (BookBuddy)', 'g'], ['Tags', 'tg'], ['Vorgeschlagene Tags', 'ts'], ['Themen', 'tt'],
       ['Language', 'l'], ['Number of Pages', 'pg'], ['ISBN', 'i'], ['Status', 'st'], ['Rating', 'r'],
       ['Date Started', 'ds'], ['Date Finished', 'df'], ['Date Added', 'da'], ['Format', 'fm'], ['Auch auf Kindle', 'kd'], ['Kindle-ASIN', 'ka'],

@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.4.1';
+const APP_VERSION = '1.5.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -22,16 +22,20 @@ const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/
 const cmp = (a,b) => String(a||'').localeCompare(String(b||''),'de',{sensitivity:'base'});
 const LS = (k,v) => { try { if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);} catch(e){ return null; } };
 const list = s => String(s||'').split(',').map(x=>x.trim()).filter(Boolean);
+// Personen im Autorfeld: „A, B & C“ → ['A','B','C'] (ohne Dubletten)
+const persons = s => [...new Set(String(s||'').split(/\s*[,;]\s*|\s+&\s+|\s+und\s+/).map(x=>x.trim()).filter(Boolean))];
+// Suchtext: Wörter durch Leerzeichen getrennt, damit Suchbegriffe am Wortanfang greifen
+const words = s => ' ' + norm(s).replace(/[^\p{L}\p{N}]+/gu, ' ').trim() + ' ';
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),3200); }
 
 // ---------- Zustand ----------
 let ALL = [], B = [], REGELN = {}, mapDirty = true;
-const state = { fmt:'', sug:true, q:'', cat:'', st:'', lang:'', tag:'', sort:'added', view: LS('bb_view')||'grid', limit:60 };
+const state = { fmt:'', sug:true, q:'', author:'', cat:'', st:'', lang:'', tag:'', sort:'added', view: LS('bb_view')||'grid', limit:60 };
 
 async function load(){
   ALL = await Data.allBooks();
   B = ALL.filter(b=>!b.del);
-  B.forEach(b=>{ b.hay = norm([b.t,b.s,b.a,b.p,(b.tg||[]).join(' '),(b.ts||[]).join(' '),(b.tt||[]).join(' '),b.su,b.n,(b.kn||[]).join(' '),b.i,b.loc,b.lendTo].join(' ')); });
+  B.forEach(b=>{ b.hay = words([b.t,b.s,b.a,b.ue,b.p,(b.tg||[]).join(' '),(b.ts||[]).join(' '),(b.tt||[]).join(' '),b.su,b.n,(b.kn||[]).join(' '),b.i,b.loc,b.lendTo].join(' ')); b.pers = persons(b.a); });
   REGELN = await Data.getMeta('regeln', {});
   mapDirty = true;
 }
@@ -78,8 +82,10 @@ const sorters = {
   edited:(a,b)=>String(b.u||'').localeCompare(String(a.u||'')),
 };
 function filtered(){
-  const terms = norm(state.q).split(/\s+/).filter(Boolean);
+  // Suchbegriff passt am Wortanfang („icke“ findet nicht „Dickens“); mit * davor überall im Wort („*krieg“)
+  const terms = norm(state.q).split(/\s+/).filter(Boolean).map(t => t.startsWith('*') ? norm(t.slice(1)).replace(/[^\p{L}\p{N}]+/gu,' ') : ' ' + t.replace(/[^\p{L}\p{N}]+/gu,' ').trim()).filter(t=>t.trim());
   let r = B.filter(b =>
+    (!state.author || b.pers.includes(state.author)) &&
     (!state.cat || b.c===state.cat) &&
     (!state.fmt || (state.fmt==='bb'&&b.fm!=='Kindle') || (state.fmt==='kd'&&b.kd) || (state.fmt==='ko'&&b.fm==='Kindle') || (state.fmt==='lend'&&b.lendTo)) &&
     (!state.st || b.st===state.st) && (!state.lang || b.l===state.lang) &&
@@ -106,8 +112,10 @@ function row(b){
 function render(){
   const r = filtered(), out = $('out'), info = $('info');
   info.innerHTML = `<span>${r.length.toLocaleString('de-DE')} ${r.length===1?'Buch':'Bücher'}</span>` +
+    (state.author ? `<span class="active-tag" id="clrAut">Autor: ${esc(state.author)} ✕</span> ` : '') +
     (state.tag ? `<span class="active-tag" id="clrTag">Tag: ${esc(state.tag)} ✕</span> <label style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="sugT" ${state.sug?'checked':''}>inkl. Vorschläge</label>` : '');
   const t = $('clrTag'); if (t) t.onclick = ()=>{ state.tag=''; render(); };
+  const ca = $('clrAut'); if (ca) ca.onclick = ()=>{ state.author=''; render(); };
   const sg = $('sugT'); if (sg) sg.onchange = ()=>{ state.sug=sg.checked; state.limit=60; render(); };
   if (!r.length){ out.innerHTML = '<div class="empty">Keine Bücher gefunden.</div>'; return; }
   out.innerHTML = `<div class="${state.view}">${r.slice(0,state.limit).map(state.view==='grid'?card:row).join('')}</div>` +
@@ -124,8 +132,8 @@ const setView = v => { state.view=v; LS('bb_view',v); $('vGrid').classList.toggl
 $('vGrid').onclick=()=>setView('grid'); $('vList').onclick=()=>setView('list');
 
 function showInCatalog(n){
-  Object.assign(state,{q:'',cat:'',tag:'',st:'',lang:'',fmt:'',sug:true,limit:60}); $('q').value=''; $('fmt').value='';
-  if (n.k==='c') state.cat=n.n; else if (n.k==='t') state.tag=n.n; else { state.q=n.n; $('q').value=n.n; }
+  Object.assign(state,{q:'',author:'',cat:'',tag:'',st:'',lang:'',fmt:'',sug:true,limit:60}); $('q').value=''; $('fmt').value='';
+  if (n.k==='c') state.cat=n.n; else if (n.k==='t') state.tag=n.n; else state.author=n.n;
   drawFilters(); render(); location.hash='katalog'; scrollTo({top:0});
 }
 
@@ -137,6 +145,7 @@ function openBook(b){
   $('dh').innerHTML = `<button class="x" aria-label="Schließen">✕</button>${b.cv?`<div class="dcover">${coverImg(b)}</div>`:''}
     <h2>${esc(b.t)}</h2>${b.s?`<div style="opacity:.9">${esc(b.s)}</div>`:''}<div style="margin-top:8px;opacity:.95">${esc(b.a)}</div>`;
   const f = [['Status',esc(b.st)+(b.stk?' <span class="mut">(aus Kindle übernommen)</span>':'')],
+    ['Übersetzer/Hrsg.',esc(b.ue)],
     ['Format',b.fm==='Kindle'?'Kindle-E-Book':b.kd?'Gedruckt · auch auf Kindle':'Gedruckt'],
     ['Verliehen',b.lendTo?`an ${esc(b.lendTo)}${b.lendSince?' seit '+fmtDate(b.lendSince):''}`:''],
     ['Standort',esc(b.loc)],
@@ -159,7 +168,7 @@ function openBook(b){
     (b.su?`<h3>Klappentext</h3><p>${esc(b.su)}</p>`:'') +
     (b.n?`<h3>Notizen</h3><div class="note">${esc(b.n)}</div>`:'') +
     (b.kn&&b.kn.length?`<h3>Kindle-Notizen</h3>${b.kn.map(n=>`<div class="note" style="margin-bottom:8px">${esc(n)}</div>`).join('')}`:'') +
-    `<h3>Mehr vom Autor</h3><div class="tagl"><button class="chip" data-author="${esc(b.a)}">Alle Bücher von ${esc(b.a)}</button></div>`;
+    `<h3>Mehr vom Autor</h3><div class="tagl">${persons(b.a).map(p=>`<button class="chip" data-author="${esc(p)}">Alle Bücher von ${esc(p)}</button>`).join('')}</div>`;
   dlg.dataset.id = b.id;
   if (!dlg.open) dlg.showModal(); $('db').scrollTop=0;
 }
@@ -172,12 +181,12 @@ dlg.onclick = async e => {
   const ka = e.target.closest('#kApp');
   if (ka) { e.preventDefault(); try { await navigator.clipboard.writeText(b.t); toast('Titel kopiert – in der Kindle-App in die Suche einfügen'); } catch(err) {} setTimeout(()=>{ location.href = ka.getAttribute('href'); }, 600); return; }
   const tg = e.target.closest('[data-tag]'); if (tg){ state.tag=tg.dataset.tag; state.limit=60; dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
-  const au = e.target.closest('[data-author]'); if (au){ Object.assign(state,{q:au.dataset.author,cat:'',tag:'',limit:60}); $('q').value=state.q; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
+  const au = e.target.closest('[data-author]'); if (au){ Object.assign(state,{q:'',author:au.dataset.author,cat:'',tag:'',limit:60}); $('q').value=''; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
 };
 
 // ---------- Bearbeiten / Neu ----------
 const FIELDS = [
-  ['t','Titel','text',true],['s','Untertitel','text'],['a','Autor(en)','text',true],['p','Verlag','text'],
+  ['t','Titel','text',true],['s','Untertitel','text'],['a','Autor(en)','text',true],['ue','Übersetzer/Herausgeber','text'],['p','Verlag','text'],
   ['y','Erscheinungsjahr','text'],['i','ISBN','text'],['pg','Seiten','text'],['l','Sprache','text'],
   ['c','Kategorie','cat'],['st','Status','status'],['r','Bewertung','rating'],['fmt','Format','format'],
   ['ds','Begonnen','date'],['df','Beendet','date'],['da','Hinzugefügt','date'],['loc','Standort (Regal)','text'],
@@ -202,7 +211,7 @@ function editBook(b, prefill){
         <input name="cv" type="hidden" value="${esc(v.cv||'')}"><input type="url" id="cvUrl" placeholder="oder Bild-Adresse (https://…)" value="${esc(/^data:/.test(v.cv||'')?'':(v.cv||''))}"></div>`;
     else if (type==='area') el = `<textarea name="${k}" rows="${k==='su'?5:3}">${esc(val)}</textarea>`;
     else el = `<input name="${k}" type="${type==='date'?'date':'text'}" value="${esc(String(val).slice(0, type==='date'?10:undefined))}" ${req?'required':''} ${k==='y'||k==='pg'?'inputmode="numeric"':''}>`;
-    return `<label class="fl ${type==='cover'||type==='area'||type==='list'||k==='t'||k==='s'||k==='a'?'wide':''}"><span>${label}</span>${el}</label>`;
+    return `<label class="fl ${type==='cover'||type==='area'||type==='list'||k==='t'||k==='s'||k==='a'||k==='ue'?'wide':''}"><span>${label}</span>${el}</label>`;
   };
   $('editForm').innerHTML = `<div class="eh"><h2>${isNew?'Neues Buch':'Bearbeiten'}</h2><button type="button" class="btn" id="eCancel">Abbrechen</button></div>
     <div class="eb"><div class="fgrid">${FIELDS.map(input).join('')}</div>
@@ -249,8 +258,8 @@ function shrinkImage(file){
   });
 }
 async function saveBook(old, n){
-  n = {...n}; delete n.hay; delete n.fmt;
-  ['fm','kd','lendTo','lendSince','loc','stk'].forEach(k=>{ if(!n[k]) delete n[k]; });
+  n = {...n}; delete n.hay; delete n.pers; delete n.fmt;
+  ['fm','kd','lendTo','lendSince','loc','stk','ue'].forEach(k=>{ if(!n[k]) delete n[k]; });
   n.u = Data.now();
   if (old && n.st!==old.st) delete n.stk;
   await Data.putBooks([n]);
@@ -319,6 +328,7 @@ async function lookupAndEdit(isbn){
   addDlg.close(); editBook(null, pre);
 }
 $('addBtn').onclick = openAdd;
+$('pruefBtn').onclick = ()=>{ $('pruefBtn').textContent = 'Erneut prüfen'; buildPruefung(); };
 
 // ---------- Historie ----------
 let hLimit = 100;
@@ -424,7 +434,7 @@ async function applyKindlePlan(){
   const p = kindlePlan; if (!p) return;
   const now = Data.now(), today = Data.today(), put = [], rows = [];
   for (const u of p.updates) {
-    const b = {...u.b, ...u.set, u: now}; delete b.hay; put.push(b);
+    const b = {...u.b, ...u.set, u: now}; delete b.hay; delete b.pers; put.push(b);
     if (u.why.length) rows.push(['Kindle', b.t, b.a, u.why.join('; '), today]);
   }
   for (const b of p.neu) { put.push({...b, u: now}); rows.push(['Kindle', b.t, b.a, 'neu aufgenommen (Kindle-Kauf)', today]); }
@@ -445,7 +455,7 @@ function refreshViews(){
   const h = location.hash;
   if (h==='#landkarte') { buildMap(computeGraph(B, REGELN.karte_ausgeblendete_tags)); mapDirty=false; }
   if (h==='#historie') buildHist();
-  if (h==='#daten') buildData();
+  if (h==='#daten') { buildData(); if ($('pruefOut').innerHTML) buildPruefung(); }
 }
 async function route(){
   const init = (await Data.getMeta('initialisiert', false)) || B.length>0;

@@ -58,3 +58,12 @@ body.welcome .bar,body.welcome #cats,body.welcome #info,body.welcome main,body.w
 .kindlerow{margin:-4px 0 12px}
 .kindlerow a{text-decoration:none}
 .ksum{padding-left:18px}.ksum li{margin:6px 0}.klist{font-size:13px;max-height:260px;overflow:auto;padding-left:18px}details summary{cursor:pointer;color:var(--accent);font-size:13px;display:inline}
+
+/* Datenprüfung */
+#pruefOut{margin-top:10px}
+details.pruef{border-top:1px solid var(--line);padding:8px 0}
+details.pruef>summary{cursor:pointer;padding:4px 0}
+.cnt{display:inline-block;min-width:22px;text-align:center;font-size:12px;background:var(--chip);border-radius:999px;padding:1px 7px;margin-left:4px;color:var(--muted)}
+.pg{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+.lnk{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-align:left}
+.btn.sm{padding:3px 8px;font-size:12px;margin-left:6px}

@@ -12,7 +12,10 @@ Projektdokumentation: [Projekt](docs/PROJEKT.md) · [Änderungen](docs/CHANGELOG
 
 ## Funktionen (Stufe 1)
 - Katalog mit Suche (Titel, Autor, Tags, Klappentext, Notizen), Filtern (Kategorie, Status, Sprache,
-  Format, verliehen) und Sortierungen; Kachel- und Listenansicht
+  Format, verliehen, Autor) und Sortierungen; Kachel- und Listenansicht. Suchbegriffe greifen am
+  Wortanfang („icke“ findet nicht „Dickens“); mit `*` davor überall im Wort („*krieg“ findet „Weltkrieg“)
+- Datenprüfung (Daten-Ansicht): Namensvarianten vereinheitlichen, Übersetzer aus dem Autorfeld lösen,
+  mögliche Dubletten, Kategorie-Ausreißer, fehlende Angaben
 - Bücher hinzufügen: Barcode-Scan mit der Kamera, ISBN nachschlagen (Google Books, Open Library),
   Dublettenprüfung, Erfassen von Hand
 - Bearbeiten aller Felder, Schnell-Status, Löschen; Standort im Regal, Verleihen (an wen, seit wann),
@@ -62,6 +65,7 @@ Felder eines Buchs (leere Felder können fehlen):
 |---|---|
 | `id` | eindeutige Kennung (`bb-…` aus BookBuddy, `kd-ASIN` aus Kindle, `b-…` in der App angelegt) |
 | `t`, `s`, `a`, `al` | Titel, Untertitel, Autor(en), Autor für Sortierung („Nachname, Vorname“) |
+| `ue` | Übersetzer, Herausgeber, Nachwort (seit 1.5.0; nicht im Autorfeld, damit Bücher beim Autor erscheinen) |
 | `p`, `y`, `pg`, `i`, `l` | Verlag, Erscheinungsjahr, Seiten, ISBN-13, Sprache |
 | `c`, `g`, `cz` | Kategorie, ursprüngliches BookBuddy-Genre, Kategorie nachträglich zugeordnet (1) |
 | `tg`, `ts`, `tt` | eigene Tags, vorgeschlagene Tags, inhaltliche Themen (Listen) |
@@ -92,6 +96,7 @@ werden übersprungen. Jede Änderung erscheint in der Änderungsliste.
 - `js/isbn.js` – ISBN-Prüfung, Nachschlagen, Barcode-Scan
 - `js/kindle.js` – Kindle-Abgleich (liest den Amazon-Export, ordnet zu, plant Änderungen)
 - `js/map.js` – Themenlandkarte
+- `js/pruefung.js` – Datenprüfung
 - `js/app.js` – Katalog, Bearbeiten, Historie, Daten
 - `sw.js`, `manifest.webmanifest` – Offline-Betrieb und Installation
 - `vendor/` – d3 (Karte), ZXing (Barcode) und JSZip (Kindle-Export), lokal eingebunden, damit die App offline läuft

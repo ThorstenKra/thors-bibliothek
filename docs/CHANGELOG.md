@@ -1,5 +1,17 @@
 # Änderungsprotokoll
 
+## 1.5.0 – 18.11.2026
+- **Suche am Wortanfang**: „icke“ findet nicht mehr „Dickens“ oder „entwickelt“; `*` davor sucht
+  überall im Wort. Ein Tipp auf „Alle Bücher von …“ (oder einen Autor auf der Landkarte) filtert
+  genau nach diesem Autor; bei mehreren Personen gibt es je einen Knopf.
+- Neues Feld **Übersetzer/Herausgeber** (`ue`) in Bearbeiten, Buchansicht, Suche und CSV.
+- **Datenprüfung** unter Daten: Namensvarianten (mit „Vereinheitlichen“), mehrere Personen im
+  Autorfeld (mit „Rest → Übersetzer/Hrsg.“), mögliche Dubletten, Kategorie-Ausreißer, fehlende Angaben.
+- Ergänzungen mit `aendern` können auch Autor, Übersetzer, Kindle-Angaben und Löschungen setzen
+  (zum Zusammenführen von Dubletten); verständlichere Einträge in der Änderungsliste.
+- Ergänzung `bibliothek-bereinigung.json`: 94 Namensschreibweisen, 63 Übersetzer/Herausgeber,
+  19 Dubletten, 7 Kategorien, 1 Autor (Prüfbericht als Claude-Dokument).
+
 ## 1.4.1 – 18.11.2026
 - Themenlandkarte: Tags, die wie eine Kategorie heißen (z. B. „Belletristik“, „Science Fiction“,
   „Philosophie“), erscheinen nicht mehr als zweiter Punkt neben der Kategorie.
