@@ -57,3 +57,4 @@ body.welcome .bar,body.welcome #cats,body.welcome #info,body.welcome main,body.w
 .cvprev img{width:100%;display:block}
 .kindlerow{margin:-4px 0 12px}
 .kindlerow a{text-decoration:none}
+.ksum{padding-left:18px}.ksum li{margin:6px 0}.klist{font-size:13px;max-height:260px;overflow:auto;padding-left:18px}details summary{cursor:pointer;color:var(--accent);font-size:13px;display:inline}

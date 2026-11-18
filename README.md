@@ -18,6 +18,8 @@ App: https://thorstenkra.github.io/thors-bibliothek/
   Anzeigen geladen und auf dem Gerät zwischengespeichert; eigenes Cover per Foto möglich
 - Kindle-Bücher öffnen: direkt im Kindle Cloud Reader (Browser); die Kindle-App für iOS ignoriert die
   Buchkennung in Links, daher kopiert die App den Titel für die Suche in der Kindle-App
+- Kindle-Abgleich direkt in der App: ZIP aus Amazons Datenexport laden, Vorschau der Änderungen
+  (neue Kindle-Käufe, auf Kindle beendete Bücher, neue Notizen), dann übernehmen – ohne Server/Claude
 - Themenlandkarte (Kategorien, Themen, Autoren), wird aus den aktuellen Daten berechnet
 - Historie: Änderungsprotokoll und jede einzelne Änderung an Büchern
 - Sicherung als JSON (vollständig) und CSV (für Numbers/Excel), Zusammenführen von Sicherungen
@@ -82,13 +84,14 @@ Sicherung über „Sicherung zusammenführen“ geladen.
 - `index.html`, `css/` – Oberfläche
 - `js/data.js` – Speicherung (IndexedDB), Sicherung, Zusammenführen
 - `js/isbn.js` – ISBN-Prüfung, Nachschlagen, Barcode-Scan
+- `js/kindle.js` – Kindle-Abgleich (liest den Amazon-Export, ordnet zu, plant Änderungen)
 - `js/map.js` – Themenlandkarte
 - `js/app.js` – Katalog, Bearbeiten, Historie, Daten
 - `sw.js`, `manifest.webmanifest` – Offline-Betrieb und Installation
-- `vendor/` – d3 (Karte) und ZXing (Barcode), lokal eingebunden, damit die App offline läuft
+- `vendor/` – d3 (Karte), ZXing (Barcode) und JSZip (Kindle-Export), lokal eingebunden, damit die App offline läuft
 
 Keine Build-Schritte, keine Abhängigkeiten zur Laufzeit. Bei einer neuen Version in `sw.js` die
 Konstante `CACHE` hochzählen, damit installierte Apps aktualisiert werden.
 
 ## Lizenzen
-d3: ISC (`vendor/d3.LICENSE`), ZXing: Apache 2.0 (`vendor/zxing.LICENSE`).
+d3: ISC (`vendor/d3.LICENSE`), ZXing: Apache 2.0 (`vendor/zxing.LICENSE`), JSZip: MIT (`vendor/jszip.LICENSE.md`).

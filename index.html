@@ -106,6 +106,13 @@
     <p id="impResult"></p>
   </div>
   <div class="panelbox">
+    <h2>Kindle-Abgleich</h2>
+    <p>Lade den Kindle-Datenexport von Amazon (ZIP aus <i>Mein Konto → Datenschutz → „Meine Daten anfordern“ → Kindle</i>). Die App zeigt vorher, was sich ändern würde: neue Kindle-Käufe, auf Kindle beendete Bücher, neue Notizen. Deine eigenen Angaben bleiben erhalten.</p>
+    <label class="btn on filebtn">Kindle-Export wählen (ZIP)<input type="file" id="kindleZip" accept=".zip,application/zip" multiple hidden></label>
+    <p id="kindleLast" class="hint2"></p>
+    <div id="kindleOut"></div>
+  </div>
+  <div class="panelbox">
     <h2>Auf diesem Gerät</h2>
     <p id="storageInfo"></p>
   </div>
@@ -136,9 +143,11 @@
 
 <script src="vendor/d3.min.js"></script>
 <script src="vendor/zxing.min.js" defer></script>
+<script src="vendor/jszip.min.js" defer></script>
 <script src="js/data.js"></script>
 <script src="js/isbn.js"></script>
 <script src="js/map.js"></script>
+<script src="js/kindle.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

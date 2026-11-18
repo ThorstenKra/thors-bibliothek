@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.2.2';
+const APP_VERSION = '1.3.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -361,6 +361,8 @@ async function buildData(){
   $('storageInfo').innerHTML = `${B.length.toLocaleString('de-DE')} Bücher${est}. ` + (pers ? 'Dauerhafter Speicher ist aktiv.' :
     'Tipp: Auf iPad/iPhone die App über <b>Teilen → „Zum Home-Bildschirm“</b> installieren – dann bleiben die Daten zuverlässig erhalten. Regelmäßige Sicherungen in iCloud Drive schützen zusätzlich.');
   $('version').textContent = 'Version ' + APP_VERSION;
+  const kl = await Data.getMeta('kindleAbgleich', null);
+  $('kindleLast').textContent = kl ? `Letzter Kindle-Abgleich: ${fmtDate(kl)}` : 'Bisheriger Kindle-Stand: Übernahme vom 18.11.2026.';
 }
 $('expJson').onclick = backupJSON;
 $('updBtn').onclick = async ()=>{
@@ -386,6 +388,56 @@ $('impReplace').onchange = e => { if (e.target.files[0] && confirmReplace()) imp
 function confirmReplace(){ return window.confirm ? confirm('Alle Bücher auf diesem Gerät durch die Datei ersetzen?') : true; }
 $('impFirst').onchange = async e => { if (e.target.files[0] && await importFile(e.target.files[0], 'replace', $('firstResult'))) { location.hash='katalog'; route(); } e.target.value=''; };
 $('startEmpty').onclick = async e => { e.preventDefault(); await Data.setMeta('initialisiert', true); await Data.log('Start', 'Leere Bibliothek angelegt.'); location.hash='katalog'; route(); };
+
+// ---------- Kindle-Abgleich ----------
+let kindlePlan = null;
+$('kindleZip').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = ''; if (!files.length) return;
+  const out = $('kindleOut'); out.innerHTML = '<p>Lese Kindle-Export …</p>';
+  try {
+    if (!window.JSZip) throw new Error('ZIP-Bibliothek nicht geladen – App bitte neu öffnen.');
+    const kd = await Kindle.readExport(files, t => { out.innerHTML = `<p>${esc(t)}</p>`; });
+    kindlePlan = Kindle.plan(kd, ALL);
+    kindlePlan.stats = { buecher: kd.filter(x=>x.status==='Active').length, beendet: kd.filter(x=>x.beendet).length };
+    showKindlePlan();
+  } catch (err) { out.innerHTML = `<p>Fehler: ${esc(err.message)}</p>`; }
+};
+function showKindlePlan(){
+  const p = kindlePlan, out = $('kindleOut');
+  const st = p.updates.filter(u=>u.set.st), nt = p.updates.filter(u=>u.set.kn), mark = p.updates.filter(u=>u.set.kd);
+  const quiet = p.updates.length - new Set([...st,...nt,...mark]).size;
+  const li = (arr, f) => arr.length ? `<details><summary>${arr.length} anzeigen</summary><ul class="klist">${arr.slice(0,300).map(f).join('')}</ul></details>` : '';
+  out.innerHTML = `<p>Export gelesen: ${p.stats.buecher} Kindle-Bücher, ${p.stats.beendet} als beendet erfasst.</p>
+    <ul class="ksum">
+      <li><b>${p.neu.length}</b> neue Kindle-Bücher (gekauft, noch nicht in der Bibliothek) ${li(p.neu, b=>`<li>${esc(b.t)} – <span class="mut">${esc(b.a)}</span></li>`)}</li>
+      <li><b>${st.length}</b> Bücher auf „Gelesen“ setzen (auf Kindle beendet) ${li(st, u=>`<li>${esc(u.b.t)} – <span class="mut">${esc(u.why.find(w=>w.startsWith('Status'))||'')}</span></li>`)}</li>
+      <li><b>${mark.length}</b> vorhandene Bücher als „auch auf Kindle“ kennzeichnen ${li(mark, u=>`<li>${esc(u.b.t)}</li>`)}</li>
+      <li><b>${nt.length}</b> Bücher mit neuen Kindle-Notizen ${li(nt, u=>`<li>${esc(u.b.t)}</li>`)}</li>
+      ${quiet>0?`<li><b>${quiet}</b> Bücher mit aktualisierten Kindle-Angaben (Markierungen, Datum)</li>`:''}
+    </ul>
+    ${p.neu.length||p.updates.length ? `<div class="btnrow"><button class="btn on" id="kApply">Änderungen übernehmen</button><button class="btn" id="kCancel">Verwerfen</button></div>
+    <p class="hint2">Neue Kindle-Bücher erscheinen unter „Ohne Kategorie“ und lassen sich dort einordnen.</p>` : '<p><b>Alles ist bereits auf dem neuesten Stand.</b></p>'}`;
+  const a = $('kApply'); if (a) a.onclick = applyKindlePlan;
+  const c = $('kCancel'); if (c) c.onclick = ()=>{ kindlePlan=null; out.innerHTML='<p class="hint2">Verworfen – nichts geändert.</p>'; };
+}
+async function applyKindlePlan(){
+  const p = kindlePlan; if (!p) return;
+  const now = Data.now(), today = Data.today(), put = [], rows = [];
+  for (const u of p.updates) {
+    const b = {...u.b, ...u.set, u: now}; delete b.hay; put.push(b);
+    if (u.why.length) rows.push(['Kindle', b.t, b.a, u.why.join('; '), today]);
+  }
+  for (const b of p.neu) { put.push({...b, u: now}); rows.push(['Kindle', b.t, b.a, 'neu aufgenommen (Kindle-Kauf)', today]); }
+  await Data.putBooks(put);
+  const ae = await Data.getMeta('aenderungen', []); await Data.setMeta('aenderungen', ae.concat(rows));
+  await Data.setMeta('ungesichert', (await Data.getMeta('ungesichert', 0)) + rows.length);
+  const st = p.updates.filter(u=>u.set.st).length;
+  await Data.log('Kindle', `Kindle-Export abgeglichen: ${p.neu.length} neue Kindle-Bücher, ${st} als gelesen übernommen, ${p.updates.length} Bücher aktualisiert.`);
+  await Data.setMeta('kindleAbgleich', today);
+  kindlePlan = null; await load(); refreshViews();
+  $('kindleOut').innerHTML = `<p><b>Übernommen.</b> ${p.neu.length} neu, ${p.updates.length} aktualisiert. Denk an eine Sicherung.</p>`;
+  toast('Kindle-Abgleich übernommen');
+}
 
 // ---------- Navigation ----------
 function refreshViews(){
