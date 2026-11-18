@@ -14,6 +14,8 @@ App: https://thorstenkra.github.io/thors-bibliothek/
   Dublettenprüfung, Erfassen von Hand
 - Bearbeiten aller Felder, Schnell-Status, Löschen; Standort im Regal, Verleihen (an wen, seit wann),
   Wunschliste, Format (gedruckt / Kindle / beides)
+- Cover: aus BookBuddy-Bildern, Google Books, Open Library und Amazon (Kindle); werden beim ersten
+  Anzeigen geladen und auf dem Gerät zwischengespeichert; eigenes Cover per Foto möglich
 - Themenlandkarte (Kategorien, Themen, Autoren), wird aus den aktuellen Daten berechnet
 - Historie: Änderungsprotokoll und jede einzelne Änderung an Büchern
 - Sicherung als JSON (vollständig) und CSV (für Numbers/Excel), Zusammenführen von Sicherungen
@@ -62,11 +64,16 @@ Felder eines Buchs (leere Felder können fehlen):
 | `su`, `n` | Klappentext, Notizen |
 | `fm`, `kd` | `"Kindle"` = nur E-Book; `kd: 1` = (auch) auf Kindle |
 | `kdf`, `km`, `kn`, `stk` | auf Kindle beendet am, Anzahl Kindle-Markierungen, Kindle-Notizen, Status aus Kindle übernommen |
+| `cv` | Cover: Bild-Adresse (https) oder eigenes Foto als data-URL |
 | `loc`, `lendTo`, `lendSince` | Standort im Regal, verliehen an, verliehen seit |
 | `u` | Zeitpunkt der letzten Änderung (ISO 8601) – entscheidet beim Zusammenführen |
 | `del` | gelöscht (Markierung, damit Löschungen auf andere Geräte übertragen werden) |
 
 Die CSV-Ausgabe enthält dieselben Felder mit lesbaren Spaltennamen.
+
+**Ergänzungsdateien** (`"typ": "ergaenzung"`, Feld `felder`: `{ id: { feld: wert } }`) füllen nur
+leere Felder vorhandener Bücher und lassen eigene Änderungen unberührt. Sie werden wie eine
+Sicherung über „Sicherung zusammenführen“ geladen.
 
 ## Aufbau
 - `index.html`, `css/` – Oberfläche

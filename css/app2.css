@@ -43,3 +43,15 @@ body.welcome .bar,body.welcome #cats,body.welcome #info,body.welcome main,body.w
 /* größere Bedienflächen auf Touch-Geräten */
 @media (pointer:coarse){.btn,.chip,select,input[type=search]{min-height:40px}}
 .fl select{max-width:none}
+/* Cover-Bilder */
+.cover .cvimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:1}
+.cover .badge{z-index:2}
+.cover.hasimg:before{display:none}
+.rthumb{flex:0 0 38px;height:56px;border-radius:3px;overflow:hidden;background:var(--chip)}
+.rthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.dcover{float:right;width:84px;margin:24px 0 6px 14px;border-radius:4px;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.dcover img{width:100%;display:block}
+.dh:after{content:"";display:block;clear:both}
+.cvedit{display:flex;flex-direction:column;gap:8px}
+.cvprev{width:90px;min-height:40px;border-radius:4px;overflow:hidden}
+.cvprev img{width:100%;display:block}

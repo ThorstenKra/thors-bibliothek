@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -91,11 +91,15 @@ function filtered(){
 function card(b){
   const badge = b.lendTo ? '<span class="badge">verliehen</span>' : b.st==='Lese ich' ? '<span class="badge">lese ich</span>' : b.st==='Gelesen' ? '<span class="badge">✓ gelesen</span>' : b.st==='Wunschliste' ? '<span class="badge">Wunsch</span>' : '';
   const meta = [b.r?`<span class="stars">${stars(b.r)}</span>`:'',esc(b.y||''),b.pg?`${b.pg} S.`:'',b.kd?'<span style="color:var(--accent)">Kindle</span>':''].filter(Boolean).join(' · ')||'&nbsp;';
-  return `<button class="book" data-id="${esc(b.id)}"><div class="cover" style="background:${coverBg(b)}">${badge}
+  return `<button class="book" data-id="${esc(b.id)}"><div class="cover" style="background:${coverBg(b)}">${coverImg(b)}${badge}
     <div class="ct">${esc(b.t)}</div><div class="ca">${esc(b.a)}</div></div><div class="meta">${meta}</div></button>`;
 }
+// Cover: Bild über dem gestalteten Einband; lädt es nicht (oder nur ein Platzhalter-Pixel), bleibt der Einband sichtbar.
+const coverImg = b => b.cv ? `<img class="cvimg" src="${esc(b.cv)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : '';
+document.addEventListener('load', e => { const i = e.target; if (i.classList && i.classList.contains('cvimg')) { if (i.naturalWidth < 20 || i.naturalHeight < 20) i.remove(); else i.closest('.cover, .dcover')?.classList.add('hasimg'); } }, true);
+document.addEventListener('error', e => { const i = e.target; if (i.classList && i.classList.contains('cvimg')) i.remove(); }, true);
 function row(b){
-  return `<button class="book row" data-id="${esc(b.id)}"><span class="sw" style="background:${PALETTE[b.c]||'#777'}"></span>
+  return `<button class="book row" data-id="${esc(b.id)}"><span class="sw" style="background:${PALETTE[b.c]||'#777'}"></span>${b.cv?`<span class="rthumb">${coverImg(b)}</span>`:''}
     <span><div class="rt">${esc(b.t)}</div><div class="ra">${esc(b.a)}${b.y?' · '+b.y:''} · ${esc(b.c)}</div></span>
     <span class="rr">${b.r?`<span class="stars">${stars(b.r)}</span><br>`:''}${esc(b.st)}${b.kd?'<br><span style="color:var(--accent)">Kindle</span>':''}</span></button>`;
 }
@@ -130,7 +134,7 @@ const dlg = $('dlg');
 function openBook(b){
   if (!b) return;
   $('dh').style.background = coverBg(b);
-  $('dh').innerHTML = `<button class="x" aria-label="Schließen">✕</button>
+  $('dh').innerHTML = `<button class="x" aria-label="Schließen">✕</button>${b.cv?`<div class="dcover">${coverImg(b)}</div>`:''}
     <h2>${esc(b.t)}</h2>${b.s?`<div style="opacity:.9">${esc(b.s)}</div>`:''}<div style="margin-top:8px;opacity:.95">${esc(b.a)}</div>`;
   const f = [['Status',esc(b.st)+(b.stk?' <span class="mut">(aus Kindle übernommen)</span>':'')],
     ['Format',b.fm==='Kindle'?'Kindle-E-Book':b.kd?'Gedruckt · auch auf Kindle':'Gedruckt'],
@@ -173,7 +177,7 @@ const FIELDS = [
   ['c','Kategorie','cat'],['st','Status','status'],['r','Bewertung','rating'],['fmt','Format','format'],
   ['ds','Begonnen','date'],['df','Beendet','date'],['da','Hinzugefügt','date'],['loc','Standort (Regal)','text'],
   ['lendTo','Verliehen an','text'],['lendSince','Verliehen seit','date'],
-  ['tg','Tags (mit Komma getrennt)','list'],['tt','Inhaltliche Themen','list'],['su','Klappentext','area'],['n','Notizen','area'],
+  ['cv','Cover','cover'],['tg','Tags (mit Komma getrennt)','list'],['tt','Inhaltliche Themen','list'],['su','Klappentext','area'],['n','Notizen','area'],
 ];
 const LABEL = Object.fromEntries(FIELDS.map(f=>[f[0],f[1].replace(/ \(.*\)/,'')]));
 function editBook(b, prefill){
@@ -187,15 +191,24 @@ function editBook(b, prefill){
     else if (type==='status') el = `<select name="${k}">${STATUS.map(s=>`<option ${s===v.st?'selected':''}>${s}</option>`).join('')}</select>`;
     else if (type==='rating') el = `<select name="${k}">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${n===(v.r||0)?'selected':''}>${n?'★'.repeat(n):'keine'}</option>`).join('')}</select>`;
     else if (type==='format') el = `<select name="fmt"><option value="buch" ${v.fmt==='buch'?'selected':''}>Gedruckt</option><option value="beides" ${v.fmt==='beides'?'selected':''}>Gedruckt + Kindle</option><option value="kindle" ${v.fmt==='kindle'?'selected':''}>Nur Kindle</option></select>`;
+    else if (type==='cover') el = `<div class="cvedit"><div class="cvprev">${v.cv?`<img src="${esc(v.cv)}" alt="" referrerpolicy="no-referrer">`:'<span class="mut">kein Cover</span>'}</div>
+        <div class="btnrow"><label class="btn filebtn">📷 Cover fotografieren<input type="file" accept="image/*" capture="environment" id="cvFile" hidden></label>
+        <button type="button" class="btn" id="cvClear">Entfernen</button></div>
+        <input name="cv" type="hidden" value="${esc(v.cv||'')}"><input type="url" id="cvUrl" placeholder="oder Bild-Adresse (https://…)" value="${esc(/^data:/.test(v.cv||'')?'':(v.cv||''))}"></div>`;
     else if (type==='area') el = `<textarea name="${k}" rows="${k==='su'?5:3}">${esc(val)}</textarea>`;
     else el = `<input name="${k}" type="${type==='date'?'date':'text'}" value="${esc(String(val).slice(0, type==='date'?10:undefined))}" ${req?'required':''} ${k==='y'||k==='pg'?'inputmode="numeric"':''}>`;
-    return `<label class="fl ${type==='area'||type==='list'||k==='t'||k==='s'||k==='a'?'wide':''}"><span>${label}</span>${el}</label>`;
+    return `<label class="fl ${type==='cover'||type==='area'||type==='list'||k==='t'||k==='s'||k==='a'?'wide':''}"><span>${label}</span>${el}</label>`;
   };
   $('editForm').innerHTML = `<div class="eh"><h2>${isNew?'Neues Buch':'Bearbeiten'}</h2><button type="button" class="btn" id="eCancel">Abbrechen</button></div>
     <div class="eb"><div class="fgrid">${FIELDS.map(input).join('')}</div>
     ${isNew?'':`<p style="margin-top:18px"><button type="button" class="btn danger" id="eDel">Buch löschen</button></p>`}</div>
     <div class="ef"><button type="submit" class="btn on" id="eSave">${isNew?'Hinzufügen':'Speichern'}</button></div>`;
   $('eCancel').onclick = ()=>$('edit').close();
+  const cvIn = $('editForm').querySelector('input[name=cv]'), cvPrev = $('editForm').querySelector('.cvprev');
+  const setCv = u => { cvIn.value = u; cvPrev.innerHTML = u ? `<img src="${esc(u)}" alt="" referrerpolicy="no-referrer">` : '<span class="mut">kein Cover</span>'; };
+  $('cvFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; setCv(await shrinkImage(f)); $('cvUrl').value=''; };
+  $('cvClear').onclick = ()=>{ setCv(''); $('cvUrl').value=''; };
+  $('cvUrl').onchange = e => { const u = e.target.value.trim(); if (!u || /^https:\/\//.test(u)) setCv(u); else toast('Bitte eine https-Adresse angeben.'); };
   if (!isNew) $('eDel').onclick = async ()=>{
     if (!$('eDel').dataset.sure){ $('eDel').dataset.sure='1'; $('eDel').textContent='Wirklich löschen? Nochmal tippen'; return; }
     await saveBook(b, {...b, del:true}); $('edit').close(); toast('Buch gelöscht');
@@ -220,6 +233,16 @@ function editBook(b, prefill){
   $('edit').showModal(); $('editForm').querySelector('.eb').scrollTop = 0;
 }
 
+// Foto verkleinern (max. 480 px), damit Sicherungen klein bleiben
+function shrinkImage(file){
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const k = Math.min(1, 480 / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width*k); c.height = Math.round(img.height*k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', .8)); };
+    img.onerror = rej; img.src = url;
+  });
+}
 async function saveBook(old, n){
   n = {...n}; delete n.hay; delete n.fmt;
   ['fm','kd','lendTo','lendSince','loc','stk'].forEach(k=>{ if(!n[k]) delete n[k]; });
@@ -233,7 +256,7 @@ async function saveBook(old, n){
     const ch = [];
     for (const k of Object.keys(LABEL)){
       const a = JSON.stringify(old[k]??(Array.isArray(n[k])?[]:'')), c = JSON.stringify(n[k]??(Array.isArray(old[k])?[]:''));
-      if (a!==c && !(['""','[]','0','null'].includes(a) && ['""','[]','0','null'].includes(c))) ch.push(k==='su'||k==='n' ? `${LABEL[k]} geändert` : `${LABEL[k]}: ${fmtV(old[k])} → ${fmtV(n[k])}`);
+      if (a!==c && !(['""','[]','0','null'].includes(a) && ['""','[]','0','null'].includes(c))) ch.push(k==='su'||k==='n'||k==='cv' ? `${LABEL[k]} geändert` : `${LABEL[k]}: ${fmtV(old[k])} → ${fmtV(n[k])}`);
     }
     if ((old.fm||'')!==(n.fm||'') || !!old.kd!==!!n.kd) ch.push('Format geändert');
     if (!ch.length) { await load(); refreshViews(); return; }
@@ -341,6 +364,7 @@ async function importFile(file, mode, out){
     const obj = JSON.parse(await file.text());
     const res = await Data.importObject(obj, mode);
     if (obj.regeln) await Data.setMeta('regeln', obj.regeln);
+    if (res.ergaenzung) { await Data.log('Ergänzung', `${obj.beschreibung||'Ergänzung'}: ${res.aktualisiert} Bücher ergänzt.`); out.textContent = `Fertig: ${res.aktualisiert} Bücher ergänzt.`; await load(); refreshViews(); return true; }
     await Data.log('Sicherung', `${mode==='replace'?'Bibliothek ersetzt durch':'Zusammengeführt mit'} Sicherung vom ${fmtDate(obj.exportiert)} (${obj.geraet||'?'}): ${res.neu} neu, ${res.aktualisiert} aktualisiert.`);
     await Data.setMeta('initialisiert', true);
     out.textContent = `Fertig: ${res.neu} Bücher neu, ${res.aktualisiert} aktualisiert.`;

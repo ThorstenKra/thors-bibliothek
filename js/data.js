@@ -75,6 +75,7 @@ const Data = {
   // Zusammenführen: pro Buch gewinnt der neuere Stand (Feld u). Gelöschte Bücher bleiben als
   // Markierung (del) erhalten, damit sich Löschungen über Sicherungsdateien auf andere Geräte übertragen.
   async importObject(obj, mode = 'merge') {
+    if (obj && obj.format === FORMAT && obj.typ === 'ergaenzung') return Data.importSupplement(obj);
     if (!obj || obj.format !== FORMAT || !Array.isArray(obj.buecher)) throw new Error('Keine gültige Sicherungsdatei von Thors Bibliothek.');
     if (obj.version > FORMAT_VERSION) throw new Error('Die Datei stammt aus einer neueren App-Version. Bitte die App aktualisieren.');
     const cur = mode === 'replace' ? [] : await Data.allBooks();
@@ -100,13 +101,27 @@ const Data = {
     return { neu, aktualisiert, gesamt: obj.buecher.length };
   },
 
+  // Ergänzungsdatei: füllt nur leere Felder vorhandener Bücher (eigene Änderungen bleiben unberührt)
+  async importSupplement(obj) {
+    const books = await Data.allBooks(); const byId = new Map(books.map(b => [b.id, b]));
+    const put = []; const now = Data.now();
+    for (const [id, fields] of Object.entries(obj.felder || {})) {
+      const b = byId.get(id); if (!b) continue;
+      let ch = false;
+      for (const [k, v] of Object.entries(fields)) if (v && !b[k]) { b[k] = v; ch = true; }
+      if (ch) { b.u = now; put.push(b); }
+    }
+    await Data.putBooks(put);
+    return { neu: 0, aktualisiert: put.length, gesamt: Object.keys(obj.felder || {}).length, ergaenzung: true };
+  },
+
   // CSV im Stil des BookBuddy-Exports (lesbar in Numbers/Excel)
   async exportCSV() {
     const cols = [['Title', 't'], ['Subtitle', 's'], ['Author', 'a'], ['Publisher', 'p'], ['Year Published', 'y'],
       ['Kategorie', 'c'], ['Genre (BookBuddy)', 'g'], ['Tags', 'tg'], ['Vorgeschlagene Tags', 'ts'], ['Themen', 'tt'],
       ['Language', 'l'], ['Number of Pages', 'pg'], ['ISBN', 'i'], ['Status', 'st'], ['Rating', 'r'],
       ['Date Started', 'ds'], ['Date Finished', 'df'], ['Date Added', 'da'], ['Format', 'fm'], ['Auch auf Kindle', 'kd'],
-      ['Standort', 'loc'], ['Verliehen an', 'lendTo'], ['Verliehen seit', 'lendSince'], ['Summary', 'su'], ['Notes', 'n'], ['Kindle-Notizen', 'kn']];
+      ['Standort', 'loc'], ['Cover', 'cv'], ['Verliehen an', 'lendTo'], ['Verliehen seit', 'lendSince'], ['Summary', 'su'], ['Notes', 'n'], ['Kindle-Notizen', 'kn']];
     const esc = v => { const s = Array.isArray(v) ? v.join(', ') : v === true ? 'ja' : (v ?? '') + ''; return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const books = (await Data.allBooks()).filter(b => !b.del);
     return '﻿' + [cols.map(c => c[0]).join(',')].concat(books.map(b => cols.map(c => esc(b[c[1]])).join(','))).join('\n');

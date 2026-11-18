@@ -42,6 +42,7 @@ const ISBN = {
         t: v.title || '', s: v.subtitle || '', a: (v.authors || []).join(', '), p: v.publisher || '',
         y: (v.publishedDate || '').slice(0, 4), pg: v.pageCount ? String(v.pageCount) : '',
         l: ISBN.LANG[v.language] || v.language || '', su: v.description || '', g: (v.categories || [])[0] || '',
+        cv: ((v.imageLinks || {}).thumbnail || '').replace(/^http:/, 'https:').replace('&edge=curl', ''),
       });
     }
     if (!out.t || !out.a || !out.pg || !out.p) {
@@ -53,6 +54,7 @@ const ISBN = {
         out.p = out.p || ((d.publishers || [])[0] || {}).name || '';
         out.y = out.y || ((d.publish_date || '').match(/\d{4}/) || [''])[0];
         out.pg = out.pg || (d.number_of_pages ? String(d.number_of_pages) : '');
+        out.cv = out.cv || ((d.cover || {}).medium || '').replace(/^http:/, 'https:');
       }
     }
     return out.t ? out : null;
