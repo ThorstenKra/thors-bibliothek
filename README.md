@@ -7,6 +7,9 @@ eigenen Gerät (IndexedDB) und in Sicherungsdateien, die du selbst in iCloud Dri
 
 App: https://thorstenkra.github.io/thors-bibliothek/
 
+Projektdokumentation: [Projekt](docs/PROJEKT.md) · [Änderungen](docs/CHANGELOG.md) ·
+[Roadmap](docs/ROADMAP.md) · [Datenpflege](docs/DATENPFLEGE.md)
+
 ## Funktionen (Stufe 1)
 - Katalog mit Suche (Titel, Autor, Tags, Klappentext, Notizen), Filtern (Kategorie, Status, Sprache,
   Format, verliehen) und Sortierungen; Kachel- und Listenansicht
@@ -77,7 +80,7 @@ Felder eines Buchs (leere Felder können fehlen):
 Die CSV-Ausgabe enthält dieselben Felder mit lesbaren Spaltennamen.
 
 **Ergänzungsdateien** (`"typ": "ergaenzung"`, Feld `felder`: `{ id: { feld: wert } }`) füllen nur
-leere Felder vorhandener Bücher und lassen eigene Änderungen unberührt. Sie werden wie eine
+leere Felder vorhandener Bücher (auch Listen ohne Einträge und die Kategorie „Ohne Kategorie“) und lassen eigene Änderungen unberührt. Sie werden wie eine
 Sicherung über „Sicherung zusammenführen“ geladen.
 
 ## Aufbau

@@ -108,7 +108,8 @@ const Data = {
     for (const [id, fields] of Object.entries(obj.felder || {})) {
       const b = byId.get(id); if (!b) continue;
       let ch = false;
-      for (const [k, v] of Object.entries(fields)) if (v && !b[k]) { b[k] = v; ch = true; }
+      // leer = nicht gesetzt; „Ohne Kategorie“ zählt bei der Kategorie ebenfalls als leer
+      for (const [k, v] of Object.entries(fields)) if (v && (!b[k] || (Array.isArray(b[k]) && !b[k].length) || (k === 'c' && b[k] === 'Ohne Kategorie'))) { b[k] = v; ch = true; }
       if (ch) { b.u = now; put.push(b); }
     }
     await Data.putBooks(put);

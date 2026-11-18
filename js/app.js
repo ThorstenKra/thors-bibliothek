@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.3.2';
+const APP_VERSION = '1.3.3';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
