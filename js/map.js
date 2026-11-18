@@ -10,7 +10,10 @@ function computeGraph(books, hiddenTags){
   const catN = cnt(books.map(b=>b.c));
   const tagN = cnt(books.flatMap(all));
   const autN = cnt(books.map(b=>b.a));
-  const tags = new Set([...tagN].filter(([t,n])=>n>=5 && !dup.has(t)).map(([t])=>t));
+  // Tags, die wie eine Kategorie heißen (z. B. „Belletristik“, „Science Fiction“), nicht doppelt zeigen
+  const norm = s => (s||'').toLowerCase().replace(/[^a-zäöüß]/g, '');
+  const catNames = new Set([...catN.keys()].map(norm));
+  const tags = new Set([...tagN].filter(([t,n])=>n>=5 && !dup.has(t) && !catNames.has(norm(t))).map(([t])=>t));
   const authors = new Set([...autN].filter(([a,n])=>n>=4 && a && a!=='Unbekannt').map(([a])=>a));
   const E = new Map(); const add = (a,b)=>{ const k=a+'\u0000'+b; E.set(k,(E.get(k)||0)+1); };
   for (const b of books){

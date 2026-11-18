@@ -1,5 +1,9 @@
 # Änderungsprotokoll
 
+## 1.4.1 – 18.11.2026
+- Themenlandkarte: Tags, die wie eine Kategorie heißen (z. B. „Belletristik“, „Science Fiction“,
+  „Philosophie“), erscheinen nicht mehr als zweiter Punkt neben der Kategorie.
+
 ## 1.4.0 – 18.11.2026
 - Neue Kategorie **Science-Fiction** (eigene Farbe). Bisher gab es Science Fiction nur als Tag
   innerhalb von Belletristik.
