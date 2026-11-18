@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.7.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -123,14 +123,66 @@ function render(){
     (state.author ? `<span class="active-tag" id="clrAut">Autor: ${esc(state.author)} ✕</span> ` : '') +
     (state.tag ? `<span class="active-tag" id="clrTag">Tag: ${esc(state.tag)} ✕</span> <label style="display:flex;gap:5px;align-items:center"><input type="checkbox" id="sugT" ${state.sug?'checked':''}>inkl. Vorschläge</label>` : '');
   const t = $('clrTag'); if (t) t.onclick = ()=>{ state.tag=''; render(); };
-  const ca = $('clrAut'); if (ca) ca.onclick = ()=>{ state.author=''; render(); };
+  const ca = $('clrAut'); if (ca) ca.onclick = ()=>{ state.author=''; state.worksAll=false; render(); };
   const sg = $('sugT'); if (sg) sg.onchange = ()=>{ state.sug=sg.checked; state.limit=60; render(); };
+  if (state.author) return renderAuthor(r, out);
   if (!r.length){ out.innerHTML = '<div class="empty">Keine Bücher gefunden.</div>'; return; }
   out.innerHTML = `<div class="${state.view}">${r.slice(0,state.limit).map(state.view==='grid'?card:row).join('')}</div>` +
     (r.length>state.limit ? `<button class="btn more" id="more">Weitere ${Math.min(60,r.length-state.limit)} anzeigen (${(r.length-state.limit).toLocaleString('de-DE')} übrig)</button>` : '');
   const m = $('more'); if (m) m.onclick = ()=>{ state.limit+=60; render(); };
 }
-$('out').onclick = e => { const t=e.target.closest('.book'); if(t) openBook(B.find(b=>b.id===t.dataset.id)); };
+$('out').onclick = e => {
+  const w = e.target.closest('[data-wish]'); if (w) return addWish(w);
+  const t=e.target.closest('.book'); if(t) openBook(B.find(b=>b.id===t.dataset.id));
+};
+
+// ---------- Autorenansicht: gelesen / ungelesen / Wunschliste / weitere Werke ----------
+function renderAuthor(r, out){
+  const grp = [['Gelesen', b=>b.st==='Gelesen'], ['Noch nicht gelesen', b=>!['Gelesen','Wunschliste'].includes(b.st)], ['Auf der Wunschliste', b=>b.st==='Wunschliste']];
+  out.innerHTML = grp.map(([h,f])=>{ const l = r.filter(f); return l.length ? `<h3 class="sech">${h} <span class="cnt">${l.length}</span></h3><div class="${state.view}">${l.map(state.view==='grid'?card:row).join('')}</div>` : ''; }).join('') +
+    `<h3 class="sech">Weitere Werke von ${esc(state.author)}</h3><div id="moreWorks"><p class="mut">Suche in Open Library …</p></div>`;
+  loadWorks(state.author);
+}
+const tnorm = s => norm(s).replace(/^(der|die|das|the|el|la|le|les|los|las)\s+/,'').replace(/[^\p{L}\p{N}]+/gu,'');
+async function loadWorks(author, force){
+  const box = () => $('moreWorks');
+  const cache = await Data.getMeta('werke', {});
+  let c = cache[author];
+  if (force || !c || (Date.now() - new Date(c.datum).getTime()) > 30*864e5) {
+    if (!navigator.onLine) { if (box()) box().innerHTML = `<p class="mut">Offline – weitere Werke lassen sich nur mit Internet nachschlagen.${c?' Zeige den Stand vom '+fmtDate(c.datum)+'.':''}</p>`; if (!c) return; }
+    else {
+      const list = await ISBN.authorWorks(author);
+      if (list) { c = { datum: Data.now(), liste: list }; cache[author] = c; await Data.setMeta('werke', cache); }
+      else if (!c) { if (box() && state.author===author) box().innerHTML = '<p class="mut">Open Library ist gerade nicht erreichbar. <button class="btn sm" id="wRetry">Erneut versuchen</button></p>'; const rt=$('wRetry'); if (rt) rt.onclick=()=>loadWorks(author,true); return; }
+    }
+  }
+  if (!box() || state.author !== author) return;
+  // eigene Bücher (auch Wunschliste) herausfiltern: gleicher Titelanfang
+  const own = B.filter(b=>persons(b.a).includes(author)).flatMap(b=>[b.t, b.s && (b.t+' '+b.s)]).filter(Boolean).map(tnorm).filter(x=>x.length>2);
+  const mine = t => { const n = tnorm(t); return n.length>2 && own.some(o => o.startsWith(n.slice(0,14)) || n.startsWith(o.slice(0,14))); };
+  const rest = c.liste.filter(w => !mine(w.t) && !mine(w.orig));
+  const de = rest.filter(w=>w.de), other = rest.filter(w=>!w.de);
+  const item = w => `<div class="book row work"><span class="rthumb">${w.cv?`<img class="cvimg" src="https://covers.openlibrary.org/b/id/${w.cv}-S.jpg" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}</span>
+      <span><div class="rt">${esc(w.t)}</div><div class="ra">${w.y?'Erstausgabe '+w.y+' · ':''}${w.n} Ausgaben${w.t!==w.orig?' · Original: '+esc(w.orig):''}</div></span>
+      <span class="rr"><button class="btn sm" data-wish="${esc(w.key)}">＋ Wunschliste</button><br><a class="mut" href="https://openlibrary.org${esc(w.key)}" target="_blank" rel="noopener">Open Library</a></span></div>`;
+  const shown = state.worksAll ? de : de.slice(0, 15);
+  box().innerHTML = (de.length ? `<p class="hint2">Mit deutscher Ausgabe · ${de.length} Werke, sortiert nach Zahl der Ausgaben</p><div class="list">${shown.map(item).join('')}</div>` +
+      (de.length>shown.length ? `<button class="btn more" id="wAll">Alle ${de.length} zeigen</button>` : '') : '<p class="mut">Keine weiteren Werke mit deutscher Ausgabe gefunden.</p>') +
+    (other.length ? `<details class="wother"><summary>Nur in anderen Sprachen · ${other.length}</summary><div class="list">${other.slice(0,40).map(item).join('')}</div></details>` : '') +
+    `<p class="hint2">Quelle: Open Library, Stand ${fmtDate(c.datum)} · <button class="lnk" id="wReload">neu laden</button></p>`;
+  const a = $('wAll'); if (a) a.onclick = ()=>{ state.worksAll = true; loadWorks(author); };
+  $('wReload').onclick = ()=>loadWorks(author, true);
+  box()._works = c.liste;
+}
+async function addWish(btn){
+  const w = ($('moreWorks')._works||[]).find(x=>x.key===btn.dataset.wish); if (!w) return;
+  btn.disabled = true;
+  // Kategorie und Sprache wie die meisten Bücher dieses Autors
+  const mine = B.filter(b=>persons(b.a).includes(state.author)), top = k => Object.entries(mine.reduce((m,b)=>(b[k]&&(m[b[k]]=(m[b[k]]||0)+1),m),{})).sort((x,y)=>y[1]-x[1])[0];
+  const n = { id: Data.newId(), t: w.t, a: state.author, y: w.y ? String(w.y) : '', i: w.i || '', st: 'Wunschliste', c: (top('c')||['Ohne Kategorie'])[0], l: w.de ? 'Deutsch' : '', tg: [], da: Data.today(),
+    cv: w.cv ? `https://covers.openlibrary.org/b/id/${w.cv}-M.jpg` : '', n: 'Vorgeschlagen aus Open Library (' + w.key + ')' };
+  await saveBook(null, n); toast(`„${w.t}“ auf die Wunschliste gesetzt`);
+}
 let qto; $('q').oninput = ()=>{ clearTimeout(qto); qto=setTimeout(()=>{ state.q=$('q').value; state.limit=60; render(); },150); };
 $('st').onchange = e=>{ state.st=e.target.value; state.limit=60; render(); };
 $('ge').onchange = e=>{ state.ge=e.target.value; state.limit=60; render(); };
@@ -145,7 +197,7 @@ function showInCatalog(n){
   if (n.k==='c') state.cat=n.n;
   else if (n.k==='g') { state.ge=n.n; if (n.c) state.cat=n.c; }
   else if (n.k==='t') { state.tag=n.n; if (n.c) state.cat=n.c; }
-  else state.author=n.n;
+  else { state.author=n.n; state.worksAll=false; }
   drawFilters(); render(); location.hash='katalog'; scrollTo({top:0});
 }
 
@@ -195,7 +247,7 @@ dlg.onclick = async e => {
   if (ka) { e.preventDefault(); try { await navigator.clipboard.writeText(b.t); toast('Titel kopiert – in der Kindle-App in die Suche einfügen'); } catch(err) {} setTimeout(()=>{ location.href = ka.getAttribute('href'); }, 600); return; }
   const gn = e.target.closest('[data-genre]'); if (gn){ Object.assign(state,{q:'',author:'',tag:'',cat:b.c,ge:gn.dataset.genre,limit:60}); $('q').value=''; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); return; }
   const tg = e.target.closest('[data-tag]'); if (tg){ state.tag=tg.dataset.tag; state.limit=60; dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
-  const au = e.target.closest('[data-author]'); if (au){ Object.assign(state,{q:'',author:au.dataset.author,cat:'',tag:'',limit:60}); $('q').value=''; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
+  const au = e.target.closest('[data-author]'); if (au){ Object.assign(state,{q:'',author:au.dataset.author,cat:'',tag:'',limit:60,worksAll:false}); $('q').value=''; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
 };
 
 // ---------- Bearbeiten / Neu ----------

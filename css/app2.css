@@ -82,3 +82,11 @@ details.pruef>summary{cursor:pointer;padding:4px 0}
 .tmleaf{font:11px Inter,system-ui,sans-serif;fill:var(--ink);pointer-events:none}
 .tmleaf .tmn{fill:var(--muted)}
 .tl:hover rect{fill-opacity:1}
+
+/* Autorenansicht */
+.sech{font:600 15px Inter,system-ui,sans-serif;margin:18px 0 10px;color:var(--ink)}
+.sech:first-child{margin-top:4px}
+.work{cursor:default}
+.work .rr a{font-size:12px}
+details.wother{margin-top:12px}
+details.wother>summary{cursor:pointer;color:var(--muted);font-size:13px;margin-bottom:8px}

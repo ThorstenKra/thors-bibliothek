@@ -60,6 +60,29 @@ const ISBN = {
     return out.t ? out : null;
   },
 
+  // ---------- Weitere Werke eines Autors (Open Library) ----------
+  // Werke mit deutscher Ausgabe (deutscher Titel), bei wenigen Treffern ergänzt um alle Sprachen.
+  async authorWorks(author) {
+    const F = 'key,title,first_publish_year,edition_count,cover_i,language,editions,editions.title,editions.isbn,editions.language,editions.cover_i';
+    const q = l => 'https://openlibrary.org/search.json?q=' + encodeURIComponent(`author:"${author}"` + (l ? ' language:ger' : '')) +
+      `&fields=${F}&lang=de&sort=editions&limit=100`;
+    const map = new Map();
+    const take = (data, de) => {
+      for (const d of (data && data.docs) || []) {
+        if (!d.key || !d.title || map.has(d.key)) continue;
+        const ed = d.editions && d.editions.docs && d.editions.docs[0];
+        const ger = de || (d.language || []).includes('ger');
+        map.set(d.key, { key: d.key, t: (de && ed && ed.title) || d.title, orig: d.title, y: d.first_publish_year || '', n: d.edition_count || 0, de: ger,
+          i: ed && ed.isbn ? (ed.isbn.map(ISBN.to13).find(Boolean) || '') : '', cv: (ed && ed.cover_i) || d.cover_i || '' });
+      }
+    };
+    const de = await ISBN.fetchJSON(q(true), 12000);
+    if (!de) return null;
+    take(de, true);
+    if (map.size < 12) take(await ISBN.fetchJSON(q(false), 12000), false);
+    return [...map.values()];
+  },
+
   // ---------- Scanner ----------
   // Eigene Schleife statt ZXing.decodeFromConstraints: Die eingebaute Videoschleife erkannte nichts
   // (Zeichenfläche wurde vor dem Laden des Videos angelegt). Wir lesen alle 200 ms ein Bild aus dem

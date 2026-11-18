@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## 1.7.0 – 18.11.2026
+- **Autorenansicht** (Filter „Autor: …“): Bücher getrennt nach „Gelesen“, „Noch nicht gelesen“ und
+  „Auf der Wunschliste“, darunter **weitere Werke des Autors** aus Open Library – zuerst Werke mit
+  deutscher Ausgabe (deutscher Titel, Original dazu), sonst „Nur in anderen Sprachen“. Eigene Bücher
+  werden über den Titelanfang herausgefiltert. „＋ Wunschliste“ legt das Werk mit Status Wunschliste
+  an (Kategorie und Sprache wie beim Autor üblich, ISBN und Cover soweit bekannt).
+- Ergebnisse werden 30 Tage auf dem Gerät gespeichert (Meta `werke`), offline wird der letzte Stand gezeigt.
+
 ## 1.6.1 – 18.11.2026
 - **Barcode-Scan repariert**: Die eingebaute Videoschleife von ZXing erkannte keinen Barcode (ihre
   Zeichenfläche entstand, bevor das Kamerabild Maße hatte). Jetzt eigene Schleife: alle 200 ms der
