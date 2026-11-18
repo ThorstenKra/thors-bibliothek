@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -149,8 +149,8 @@ function openBook(b){
   $('db').innerHTML =
     `<div class="btnrow" style="margin-bottom:12px"><button class="btn on" id="bEdit">Bearbeiten</button>` +
     STATUS.filter(s=>s!==b.st).slice(0,3).map(s=>`<button class="btn" data-st="${s}">→ ${s}</button>`).join('') + `</div>` +
-    (b.ka ? `<div class="btnrow kindlerow"><a class="btn on" href="kindle://book?action=open&asin=${encodeURIComponent(b.ka)}">📖 In Kindle-App öffnen</a>
-      <a class="btn" href="https://lesen.amazon.de/?asin=${encodeURIComponent(b.ka)}" target="_blank" rel="noopener">Im Browser lesen</a>
+    (b.ka ? `<div class="btnrow kindlerow"><a class="btn on" href="https://lesen.amazon.de/?asin=${encodeURIComponent(b.ka)}" target="_blank" rel="noopener">📖 Buch lesen (Kindle im Browser)</a>
+      <a class="btn" id="kApp" href="kindle://book?action=open&asin=${encodeURIComponent(b.ka)}">Kindle-App (Titel wird kopiert)</a>
       <a class="btn" href="https://www.amazon.de/dp/${encodeURIComponent(b.ka)}" target="_blank" rel="noopener">Bei Amazon</a></div>` : '') +
     `<dl class="facts">${f.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>` +
     (b.tg&&b.tg.length?`<h3>Tags</h3>${chips(b.tg)}`:'') +
@@ -169,6 +169,8 @@ dlg.onclick = async e => {
   if (e.target.closest('#bEdit')) { dlg.close(); return editBook(b); }
   const s = e.target.closest('[data-st]');
   if (s) { await saveBook(b, {...b, st:s.dataset.st, ...(s.dataset.st==='Gelesen'&&!b.df?{df:Data.today()}:{}), ...(s.dataset.st==='Lese ich'&&!b.ds?{ds:Data.today()}:{})}); toast(`Status: ${s.dataset.st}`); return openBook(B.find(x=>x.id===b.id)); }
+  const ka = e.target.closest('#kApp');
+  if (ka) { e.preventDefault(); try { await navigator.clipboard.writeText(b.t); toast('Titel kopiert – in der Kindle-App in die Suche einfügen'); } catch(err) {} setTimeout(()=>{ location.href = ka.getAttribute('href'); }, 600); return; }
   const tg = e.target.closest('[data-tag]'); if (tg){ state.tag=tg.dataset.tag; state.limit=60; dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
   const au = e.target.closest('[data-author]'); if (au){ Object.assign(state,{q:au.dataset.author,cat:'',tag:'',limit:60}); $('q').value=state.q; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
 };

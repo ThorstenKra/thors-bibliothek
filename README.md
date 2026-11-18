@@ -16,7 +16,8 @@ App: https://thorstenkra.github.io/thors-bibliothek/
   Wunschliste, Format (gedruckt / Kindle / beides)
 - Cover: aus BookBuddy-Bildern, Google Books, Open Library und Amazon (Kindle); werden beim ersten
   Anzeigen geladen und auf dem Gerät zwischengespeichert; eigenes Cover per Foto möglich
-- Kindle-Bücher direkt öffnen: in der Kindle-App, im Browser (Kindle Cloud Reader) oder bei Amazon
+- Kindle-Bücher öffnen: direkt im Kindle Cloud Reader (Browser); die Kindle-App für iOS ignoriert die
+  Buchkennung in Links, daher kopiert die App den Titel für die Suche in der Kindle-App
 - Themenlandkarte (Kategorien, Themen, Autoren), wird aus den aktuellen Daten berechnet
 - Historie: Änderungsprotokoll und jede einzelne Änderung an Büchern
 - Sicherung als JSON (vollständig) und CSV (für Numbers/Excel), Zusammenführen von Sicherungen
