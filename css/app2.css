@@ -55,3 +55,5 @@ body.welcome .bar,body.welcome #cats,body.welcome #info,body.welcome main,body.w
 .cvedit{display:flex;flex-direction:column;gap:8px}
 .cvprev{width:90px;min-height:40px;border-radius:4px;overflow:hidden}
 .cvprev img{width:100%;display:block}
+.kindlerow{margin:-4px 0 12px}
+.kindlerow a{text-decoration:none}

@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -149,6 +149,9 @@ function openBook(b){
   $('db').innerHTML =
     `<div class="btnrow" style="margin-bottom:12px"><button class="btn on" id="bEdit">Bearbeiten</button>` +
     STATUS.filter(s=>s!==b.st).slice(0,3).map(s=>`<button class="btn" data-st="${s}">→ ${s}</button>`).join('') + `</div>` +
+    (b.ka ? `<div class="btnrow kindlerow"><a class="btn on" href="kindle://book?action=open&asin=${encodeURIComponent(b.ka)}">📖 In Kindle-App öffnen</a>
+      <a class="btn" href="https://lesen.amazon.de/?asin=${encodeURIComponent(b.ka)}" target="_blank" rel="noopener">Im Browser lesen</a>
+      <a class="btn" href="https://www.amazon.de/dp/${encodeURIComponent(b.ka)}" target="_blank" rel="noopener">Bei Amazon</a></div>` : '') +
     `<dl class="facts">${f.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>` +
     (b.tg&&b.tg.length?`<h3>Tags</h3>${chips(b.tg)}`:'') +
     (b.tt&&b.tt.length?`<h3>Inhaltliche Themen (Vorschlag)</h3>${chips(b.tt,'sug')}`:'') +
@@ -177,7 +180,7 @@ const FIELDS = [
   ['c','Kategorie','cat'],['st','Status','status'],['r','Bewertung','rating'],['fmt','Format','format'],
   ['ds','Begonnen','date'],['df','Beendet','date'],['da','Hinzugefügt','date'],['loc','Standort (Regal)','text'],
   ['lendTo','Verliehen an','text'],['lendSince','Verliehen seit','date'],
-  ['cv','Cover','cover'],['tg','Tags (mit Komma getrennt)','list'],['tt','Inhaltliche Themen','list'],['su','Klappentext','area'],['n','Notizen','area'],
+  ['cv','Cover','cover'],['ka','Kindle-ASIN','text'],['tg','Tags (mit Komma getrennt)','list'],['tt','Inhaltliche Themen','list'],['su','Klappentext','area'],['n','Notizen','area'],
 ];
 const LABEL = Object.fromEntries(FIELDS.map(f=>[f[0],f[1].replace(/ \(.*\)/,'')]));
 function editBook(b, prefill){

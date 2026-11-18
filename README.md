@@ -16,6 +16,7 @@ App: https://thorstenkra.github.io/thors-bibliothek/
   Wunschliste, Format (gedruckt / Kindle / beides)
 - Cover: aus BookBuddy-Bildern, Google Books, Open Library und Amazon (Kindle); werden beim ersten
   Anzeigen geladen und auf dem Gerät zwischengespeichert; eigenes Cover per Foto möglich
+- Kindle-Bücher direkt öffnen: in der Kindle-App, im Browser (Kindle Cloud Reader) oder bei Amazon
 - Themenlandkarte (Kategorien, Themen, Autoren), wird aus den aktuellen Daten berechnet
 - Historie: Änderungsprotokoll und jede einzelne Änderung an Büchern
 - Sicherung als JSON (vollständig) und CSV (für Numbers/Excel), Zusammenführen von Sicherungen
@@ -63,6 +64,7 @@ Felder eines Buchs (leere Felder können fehlen):
 | `ds`, `df`, `da` | begonnen, beendet, hinzugefügt (JJJJ-MM-TT) |
 | `su`, `n` | Klappentext, Notizen |
 | `fm`, `kd` | `"Kindle"` = nur E-Book; `kd: 1` = (auch) auf Kindle |
+| `ka` | Kindle-Kennung (ASIN) – für „In Kindle-App öffnen“ (`kindle://book?action=open&asin=…`) |
 | `kdf`, `km`, `kn`, `stk` | auf Kindle beendet am, Anzahl Kindle-Markierungen, Kindle-Notizen, Status aus Kindle übernommen |
 | `cv` | Cover: Bild-Adresse (https) oder eigenes Foto als data-URL |
 | `loc`, `lendTo`, `lendSince` | Standort im Regal, verliehen an, verliehen seit |

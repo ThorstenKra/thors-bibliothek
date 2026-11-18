@@ -120,7 +120,7 @@ const Data = {
     const cols = [['Title', 't'], ['Subtitle', 's'], ['Author', 'a'], ['Publisher', 'p'], ['Year Published', 'y'],
       ['Kategorie', 'c'], ['Genre (BookBuddy)', 'g'], ['Tags', 'tg'], ['Vorgeschlagene Tags', 'ts'], ['Themen', 'tt'],
       ['Language', 'l'], ['Number of Pages', 'pg'], ['ISBN', 'i'], ['Status', 'st'], ['Rating', 'r'],
-      ['Date Started', 'ds'], ['Date Finished', 'df'], ['Date Added', 'da'], ['Format', 'fm'], ['Auch auf Kindle', 'kd'],
+      ['Date Started', 'ds'], ['Date Finished', 'df'], ['Date Added', 'da'], ['Format', 'fm'], ['Auch auf Kindle', 'kd'], ['Kindle-ASIN', 'ka'],
       ['Standort', 'loc'], ['Cover', 'cv'], ['Verliehen an', 'lendTo'], ['Verliehen seit', 'lendSince'], ['Summary', 'su'], ['Notes', 'n'], ['Kindle-Notizen', 'kn']];
     const esc = v => { const s = Array.isArray(v) ? v.join(', ') : v === true ? 'ja' : (v ?? '') + ''; return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
     const books = (await Data.allBooks()).filter(b => !b.del);
