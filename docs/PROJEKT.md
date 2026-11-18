@@ -48,6 +48,10 @@ ist aber für den Betrieb nicht nötig.
   der Hauptknopf den Kindle Cloud Reader (`lesen.amazon.de/?asin=…`); der App-Knopf kopiert den Titel.
 - **App-Symbol**: eigene Zeichnung nach einem Bibliotheksfoto (Bogenflucht), Quelle `icons/icon.svg`.
 
+- **Barcode-Scan**: eigene Bildschleife (Mittelstreifen, 200 ms) mit ZXing `MultiFormatReader`, nicht
+  `decodeFromConstraints` (erkannte nichts). Test in der Sandbox: Chrome mit
+  `--use-file-for-fake-video-capture` und einem erzeugten EAN-13-Bild.
+
 ## Bekannte Grenzen
 - Markierungstexte sind im Amazon-Export nicht enthalten (Abhilfe: My Clippings.txt, Kindle-Notizbuch).
 - Google Books liefert für manche Bücher ein graues „kein Bild“-Cover.

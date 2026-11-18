@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -301,7 +301,8 @@ const addDlg = $('addDlg');
 function openAdd(){
   $('addBody').innerHTML = `<div class="eh"><h2>Buch hinzufügen</h2><button class="btn" id="aClose">Schließen</button></div>
     <div class="scanbox"><video id="vid" playsinline muted></video><div class="scanline"></div></div>
-    <div class="btnrow"><button class="btn on" id="aScan">📷 Barcode scannen</button></div>
+    <div class="btnrow"><button class="btn on" id="aScan">📷 Barcode scannen</button>
+      <label class="btn filebtn">🖼 Foto vom Barcode<input type="file" accept="image/*" capture="environment" id="aPhoto" hidden></label></div>
     <label class="fl wide" style="margin-top:14px"><span>ISBN eingeben</span>
       <div style="display:flex;gap:8px"><input id="aIsbn" inputmode="numeric" placeholder="978…" style="flex:1"><button class="btn on" id="aLookup">Nachschlagen</button></div></label>
     <p id="aMsg" class="mut"></p>
@@ -312,7 +313,18 @@ function openAdd(){
     $('aMsg').textContent = 'Barcode auf der Rückseite vor die Kamera halten …';
     $('addBody').querySelector('.scanbox').classList.add('on');
     try { await ISBN.startScan($('vid'), code => { $('addBody').querySelector('.scanbox').classList.remove('on'); $('aIsbn').value = code; handleIsbn(code); }); }
-    catch (e) { $('aMsg').textContent = 'Kamera nicht verfügbar: ' + e.message + ' – ISBN bitte eintippen.'; }
+    catch (e) { $('addBody').querySelector('.scanbox').classList.remove('on');
+      const why = e.name==='NotAllowedError' ? 'Kamerazugriff nicht erlaubt (iPad: Einstellungen → Safari → Kamera bzw. beim Öffnen „Erlauben“ tippen)' : e.name==='NotFoundError' ? 'keine Kamera gefunden' : e.name==='NotReadableError' ? 'Kamera wird gerade von einer anderen App benutzt' : e.message;
+      $('aMsg').textContent = 'Kamera nicht verfügbar: ' + why + '. Alternativ „Foto vom Barcode“ oder ISBN eintippen.'; }
+  };
+  $('aPhoto').onchange = async e => {
+    const f = e.target.files[0]; e.target.value=''; if (!f) return;
+    ISBN.stopScan(); $('addBody').querySelector('.scanbox').classList.remove('on');
+    $('aMsg').textContent = 'Lese Barcode aus dem Foto …';
+    try { const code = await ISBN.scanImageFile(f);
+      if (code) { $('aIsbn').value = code; handleIsbn(code); }
+      else $('aMsg').textContent = 'Im Foto wurde kein ISBN-Barcode erkannt. Bitte näher und gerade fotografieren oder die ISBN eintippen.'; }
+    catch (err) { $('aMsg').textContent = 'Foto konnte nicht gelesen werden: ' + err.message; }
   };
   $('aLookup').onclick = ()=>handleIsbn($('aIsbn').value);
   $('aIsbn').onkeydown = e=>{ if (e.key==='Enter'){ e.preventDefault(); handleIsbn($('aIsbn').value); } };
@@ -343,6 +355,7 @@ async function lookupAndEdit(isbn){
   addDlg.close(); editBook(null, pre);
 }
 $('addBtn').onclick = openAdd;
+addDlg.addEventListener('close', ()=>ISBN.stopScan());
 $('mapModes').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b) return; mapMode = b.dataset.mode; LS('bb_mapmode', mapMode); buildMap(); };
 $('pruefBtn').onclick = ()=>{ $('pruefBtn').textContent = 'Erneut prüfen'; buildPruefung(); };
 

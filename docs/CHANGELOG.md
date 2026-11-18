@@ -1,5 +1,13 @@
 # Änderungsprotokoll
 
+## 1.6.1 – 18.11.2026
+- **Barcode-Scan repariert**: Die eingebaute Videoschleife von ZXing erkannte keinen Barcode (ihre
+  Zeichenfläche entstand, bevor das Kamerabild Maße hatte). Jetzt eigene Schleife: alle 200 ms der
+  mittlere Bildstreifen, dekodiert mit ZXing; wo vorhanden zuerst der eingebaute `BarcodeDetector`.
+  Kamera wird beim Schließen des Dialogs sicher beendet.
+- Neuer Ersatzweg **„Foto vom Barcode“** (Kamera-App mit Autofokus, Foto wird ausgewertet).
+- Verständliche Meldungen, wenn der Kamerazugriff fehlt.
+
 ## 1.6.0 – 18.11.2026
 - Neues Feld **Genre** (`ge`) mit Filter im Katalog (zählt je gewählter Kategorie), in Buchansicht
   (antippbar), Bearbeiten, Suche und CSV.

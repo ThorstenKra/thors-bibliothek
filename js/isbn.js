@@ -61,20 +61,81 @@ const ISBN = {
   },
 
   // ---------- Scanner ----------
-  _reader: null,
-  async startScan(videoEl, onCode) {
-    if (!window.ZXing) throw new Error('Scanner-Bibliothek nicht geladen.');
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Kamera wird von diesem Browser nicht unterstützt.');
-    const hints = new Map();
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A]);
-    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
-    ISBN._reader = new ZXing.BrowserMultiFormatReader(hints, 300);
-    let done = false;
-    await ISBN._reader.decodeFromConstraints({ video: { facingMode: 'environment', width: { ideal: 1280 } } }, videoEl, (res) => {
-      if (!res || done) return;
-      const code = ISBN.to13(res.getText());
-      if (code && /^97[89]/.test(code)) { done = true; ISBN.stopScan(); onCode(code); }
-    });
+  // Eigene Schleife statt ZXing.decodeFromConstraints: Die eingebaute Videoschleife erkannte nichts
+  // (Zeichenfläche wurde vor dem Laden des Videos angelegt). Wir lesen alle 200 ms ein Bild aus dem
+  // Video, schneiden den mittleren Streifen aus und dekodieren ihn. Wo der Browser einen eigenen
+  // Barcode-Erkenner hat (BarcodeDetector), wird der zuerst benutzt.
+  _stream: null, _timer: null,
+  _hints() {
+    const h = new Map();
+    h.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8, ZXing.BarcodeFormat.UPC_A]);
+    h.set(ZXing.DecodeHintType.TRY_HARDER, true);
+    return h;
   },
-  stopScan() { try { ISBN._reader && ISBN._reader.reset(); } catch (e) {} ISBN._reader = null; },
+  _decodeCanvas(canvas, reader) {
+    try {
+      const bmp = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(canvas)));
+      return reader.decode(bmp).getText();
+    } catch (e) { return null; } finally { try { reader.reset(); } catch (e) {} }
+  },
+  _isbnFrom(text) { const c = ISBN.to13(text); return c && /^97[89]/.test(c) ? c : null; },
+
+  async startScan(videoEl, onCode) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Kamera wird von diesem Browser nicht unterstützt (HTTPS nötig).');
+    const native = ('BarcodeDetector' in window) ? await BarcodeDetector.getSupportedFormats().then(f => f.includes('ean_13') ? new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a'] }) : null).catch(() => null) : null;
+    if (!native && !window.ZXing) throw new Error('Scanner-Bibliothek nicht geladen – App bitte neu öffnen.');
+    ISBN.stopScan();
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+    ISBN._stream = stream;
+    videoEl.setAttribute('playsinline', ''); videoEl.muted = true; videoEl.srcObject = stream;
+    await videoEl.play().catch(() => {});
+    const reader = window.ZXing ? new ZXing.MultiFormatReader() : null;
+    if (reader) reader.setHints(ISBN._hints());
+    const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+    let busy = false, done = false;
+    const tick = async () => {
+      if (done || busy || !ISBN._stream) return;
+      const w = videoEl.videoWidth, h = videoEl.videoHeight; if (!w || !h) return;
+      busy = true;
+      try {
+        let text = null;
+        if (native) { const r = await native.detect(videoEl).catch(() => []); text = r[0] && r[0].rawValue; }
+        if (!text && reader) {
+          // mittlerer Streifen (wo die rote Linie ist), auf höchstens 1000 px Breite verkleinert
+          const sx = w * .05, sw = w * .9, sy = h * .25, sh = h * .5, k = Math.min(1, 1000 / sw);
+          canvas.width = Math.round(sw * k); canvas.height = Math.round(sh * k);
+          ctx.drawImage(videoEl, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+          text = ISBN._decodeCanvas(canvas, reader);
+        }
+        const code = text && ISBN._isbnFrom(text);
+        if (code) { done = true; ISBN.stopScan(); if (navigator.vibrate) navigator.vibrate(60); onCode(code); }
+      } finally { busy = false; }
+    };
+    ISBN._timer = setInterval(tick, 200);
+  },
+  stopScan() {
+    clearInterval(ISBN._timer); ISBN._timer = null;
+    if (ISBN._stream) ISBN._stream.getTracks().forEach(t => t.stop());
+    ISBN._stream = null;
+  },
+
+  // Ersatzweg: Foto des Barcodes (Kamera-App des Geräts, mit Autofokus) auswerten
+  async scanImageFile(file) {
+    if (!window.ZXing) throw new Error('Scanner-Bibliothek nicht geladen – App bitte neu öffnen.');
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+      const reader = new ZXing.MultiFormatReader(); reader.setHints(ISBN._hints());
+      const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+      // mehrere Größen probieren: Handyfotos sind groß, Barcodes manchmal klein im Bild
+      for (const max of [1600, 1000, 2400]) {
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * k); canvas.height = Math.round(img.height * k);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const code = ISBN._isbnFrom(ISBN._decodeCanvas(canvas, reader) || '');
+        if (code) return code;
+      }
+      return null;
+    } finally { URL.revokeObjectURL(url); }
+  },
 };
