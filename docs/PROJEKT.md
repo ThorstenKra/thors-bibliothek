@@ -35,6 +35,12 @@ ist aber für den Betrieb nicht nötig.
   Wirtschaft, Musik & Kunst, Bildung & Ratgeber, Biografie, Literaturwissenschaft,
   Technik & Informatik) plus „Ohne Kategorie“. Science-Fiction seit 1.4.0 als eigene Kategorie
   (vorher nur Tag innerhalb Belletristik); Fantasy und Horror bleiben unter Belletristik.
+- **Kategorie, Genre, Thema getrennt** (1.6.0): Kategorie = Sachgebiet (16), Genre (`ge`) = Gattung oder
+  Spielart, vor allem in Belletristik (15 Werte, Liste `GENRES` in `js/app.js`), Themen = Tags. Tags, die eine
+  Gattung oder Kategorie bezeichnen (`GENRE_TAGS`, z. B. „Belletristik“, „Lyrik“), zählen auf der Landkarte nicht als Thema.
+  Science-Fiction ist Kategorie *und* Genre (Fantasy/Horror innerhalb der Kategorie über das Genre erkennbar).
+- **Landkarte in drei Ansichten** statt eines gemischten Netzes: Themen, Autoren (Kosinus-Ähnlichkeit der
+  Themen, seltene Themen stärker gewichtet), Übersicht (Treemap).
 - **Drei Arten von Schlagworten**: `tg` = Thors eigene Tags, `ts` = regelbasierte Vorschläge
   (aus Autor, Kategorie, Stichwörtern), `tt` = inhaltliche Themen für Belletristik (von Claude
   einzeln vergeben, z. B. Identität, Liebe, Tod, Macht, Diktatur, Realität, Sinnsuche, Phantastik).

@@ -26,7 +26,10 @@ Projektdokumentation: [Projekt](docs/PROJEKT.md) · [Änderungen](docs/CHANGELOG
   Buchkennung in Links, daher kopiert die App den Titel für die Suche in der Kindle-App
 - Kindle-Abgleich direkt in der App: ZIP aus Amazons Datenexport laden, Vorschau der Änderungen
   (neue Kindle-Käufe, auf Kindle beendete Bücher, neue Notizen), dann übernehmen – ohne Server/Claude
-- Themenlandkarte (Kategorien, Themen, Autoren), wird aus den aktuellen Daten berechnet
+- Themenlandkarte mit drei Ansichten, aus den aktuellen Daten berechnet: **Themen** (Themen in farbigen
+  Bereichen ihrer Hauptkategorie), **Autoren** (Nähe über gemeinsame, seltene Themen; Mitautoren
+  gestrichelt), **Übersicht** (Flächen: Kategorie → Genre bzw. Hauptthema, antippen öffnet den Katalog)
+- Genre (Gattung/Spielart, v. a. Belletristik) als eigenes Feld mit Filter; Themen bleiben in den Tags
 - Historie: Änderungsprotokoll und jede einzelne Änderung an Büchern
 - Sicherung als JSON (vollständig) und CSV (für Numbers/Excel), Zusammenführen von Sicherungen
 
@@ -68,6 +71,7 @@ Felder eines Buchs (leere Felder können fehlen):
 | `ue` | Übersetzer, Herausgeber, Nachwort (seit 1.5.0; nicht im Autorfeld, damit Bücher beim Autor erscheinen) |
 | `p`, `y`, `pg`, `i`, `l` | Verlag, Erscheinungsjahr, Seiten, ISBN-13, Sprache |
 | `c`, `g`, `cz` | Kategorie, ursprüngliches BookBuddy-Genre, Kategorie nachträglich zugeordnet (1) |
+| `ge` | Genre (seit 1.6.0): Roman, Erzählungen, Lyrik, Drama, Science-Fiction, Fantasy & Phantastik, Krimi & Thriller, Horror, Märchen & Fabeln, Epos & Sage, Kinder- & Jugendbuch, Essays & Aphorismen, Erinnerungen, Briefe & Tagebücher, Werkausgabe, Anthologie |
 | `tg`, `ts`, `tt` | eigene Tags, vorgeschlagene Tags, inhaltliche Themen (Listen) |
 | `st` | Status: Ungelesen, Lese ich, Gelesen, Abgebrochen, Wunschliste |
 | `r` | Bewertung 0–5 |

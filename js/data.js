@@ -115,7 +115,7 @@ const Data = {
       for (const [k, v] of Object.entries(fields)) if (v && (!b[k] || (Array.isArray(b[k]) && !b[k].length) || (k === 'c' && b[k] === 'Ohne Kategorie'))) { b[k] = v; ch = true; }
       if (ch) { b.u = now; put.set(id, b); }
     }
-    const NAMES = { c: 'Kategorie', a: 'Autor', ue: 'Übersetzer/Hrsg.', st: 'Status', fm: 'Format', tg: 'Tags', tt: 'Themen', kd: 'Auch auf Kindle', ka: 'Kindle-ASIN', kdf: 'Auf Kindle beendet', km: 'Kindle-Markierungen', kn: 'Kindle-Notizen', del: 'Gelöscht' };
+    const NAMES = { c: 'Kategorie', ge: 'Genre', a: 'Autor', ue: 'Übersetzer/Hrsg.', st: 'Status', fm: 'Format', tg: 'Tags', tt: 'Themen', kd: 'Auch auf Kindle', ka: 'Kindle-ASIN', kdf: 'Auf Kindle beendet', km: 'Kindle-Markierungen', kn: 'Kindle-Notizen', del: 'Gelöscht' };
     for (const [id, fields] of Object.entries(obj.aendern || {})) {
       const b = byId.get(id); if (!b || b.del) continue;
       for (const [k, d] of Object.entries(fields)) {
@@ -134,7 +134,7 @@ const Data = {
   // CSV im Stil des BookBuddy-Exports (lesbar in Numbers/Excel)
   async exportCSV() {
     const cols = [['Title', 't'], ['Subtitle', 's'], ['Author', 'a'], ['Übersetzer/Herausgeber', 'ue'], ['Publisher', 'p'], ['Year Published', 'y'],
-      ['Kategorie', 'c'], ['Genre (BookBuddy)', 'g'], ['Tags', 'tg'], ['Vorgeschlagene Tags', 'ts'], ['Themen', 'tt'],
+      ['Kategorie', 'c'], ['Genre', 'ge'], ['Genre (BookBuddy)', 'g'], ['Tags', 'tg'], ['Vorgeschlagene Tags', 'ts'], ['Themen', 'tt'],
       ['Language', 'l'], ['Number of Pages', 'pg'], ['ISBN', 'i'], ['Status', 'st'], ['Rating', 'r'],
       ['Date Started', 'ds'], ['Date Finished', 'df'], ['Date Added', 'da'], ['Format', 'fm'], ['Auch auf Kindle', 'kd'], ['Kindle-ASIN', 'ka'],
       ['Standort', 'loc'], ['Cover', 'cv'], ['Verliehen an', 'lendTo'], ['Verliehen seit', 'lendSince'], ['Summary', 'su'], ['Notes', 'n'], ['Kindle-Notizen', 'kn']];

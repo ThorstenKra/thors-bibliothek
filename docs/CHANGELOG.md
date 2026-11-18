@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## 1.6.0 – 18.11.2026
+- Neues Feld **Genre** (`ge`) mit Filter im Katalog (zählt je gewählter Kategorie), in Buchansicht
+  (antippbar), Bearbeiten, Suche und CSV.
+- **Themenlandkarte in drei Ansichten**: Themen (farbige Kategorie-Bereiche), Autoren (ähnliche
+  Autoren über seltene gemeinsame Themen, Mitautoren gestrichelt, Seitenleiste mit Genres und
+  Themen), Übersicht (Flächen Kategorie → Genre bzw. Hauptthema, antippen filtert den Katalog).
+  Gattungs-Tags („Lyrik“, „Anthologie“, „Science Fiction“, „Belletristik“) sind keine Themen mehr.
+- Ergänzung `bibliothek-genres.json`: Genre für 775 Bücher aus Belletristik und Science-Fiction.
+
 ## 1.5.0 – 18.11.2026
 - **Suche am Wortanfang**: „icke“ findet nicht mehr „Dickens“ oder „entwickelt“; `*` davor sucht
   überall im Wort. Ein Tipp auf „Alle Bücher von …“ (oder einen Autor auf der Landkarte) filtert

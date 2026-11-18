@@ -11,6 +11,11 @@ Stand: 18.11.2026. Bei jeder Arbeit aktualisieren.
 | alle 3 Monate, ab 18.02.2027 | Kindle-Daten bei Amazon anfordern und in der App abgleichen | Thor (in der App, ohne Claude); neue Kindle-Bücher ggf. von Claude einordnen lassen |
 
 ## Als Nächstes umzusetzen
+- [ ] **Themen für Sachbücher**: rund 500 Sachbücher haben kein Thema außer der Kategorie (in der
+      Übersicht „ohne Thema“, z. B. 117 in Philosophie). Per Ergänzung `tt` vergeben wie bei Belletristik.
+- [ ] **Vokabeln aus dem Kindle** (28.11.): `vocab.db` des Vokabelbausteins mitkopieren; Ansicht
+      „Vokabeln aus diesem Buch“ und Export als Lernpaket für den Vokabeltrainer.
+- [ ] **Kernideen** je Buch (Feld, Claude-Ergänzung), zuerst gelesene Bücher, mit Kindle-Markierungen.
 - [ ] **Zitatsammlung**: Import von My Clippings.txt direkt in der App (offline), Markierungen
       je Buch mit Position/Datum, durchsuchbar; zusätzlich Kindle-Notizbuch als Quelle.
 - [ ] **PDF-Bücher**: neues Format „PDF“ mit Speicherort, Filter; Dubletten als „auch als PDF“.
@@ -38,6 +43,7 @@ Stand: 18.11.2026. Bei jeder Arbeit aktualisieren.
 - [ ] Artefakt-Katalog bei Claude als Archiv kennzeichnen oder löschen.
 
 ## Erledigt
+- [x] 18.11.: Genre als eigenes Feld, Landkarte mit drei Ansichten (1.6.0)
 - [x] 18.11.: Suche am Wortanfang, Autorfilter, Feld Übersetzer/Hrsg., Datenprüfung, Bereinigung (1.5.0)
 - [x] 18.11.: Landkarte ohne doppelte Punkte für Tags mit Kategorienamen (1.4.1)
 - [x] 18.11.: Kategorie Science-Fiction (1.4.0), 160 Bücher per Ergänzung verschoben

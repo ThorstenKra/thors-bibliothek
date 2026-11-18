@@ -12,7 +12,7 @@ Pro Buch gewinnt der neuere Stand (Feld `u`). Löschungen werden als Markierung 
 
 ## Ergänzungsdateien (z. B. von Claude)
 Über **„Sicherung zusammenführen“** laden. Sie füllen nur **leere** Felder vorhandener Bücher
-und lassen eigene Angaben unberührt. Bisher: `bibliothek-cover.json`, `bibliothek-kindle-links.json`, `bibliothek-science-fiction.json`, `bibliothek-bereinigung.json`.
+und lassen eigene Angaben unberührt. Bisher: `bibliothek-cover.json`, `bibliothek-kindle-links.json`, `bibliothek-science-fiction.json`, `bibliothek-bereinigung.json`, `bibliothek-genres.json`.
 Mit dem Abschnitt `aendern` können sie auch gefüllte Felder gezielt umstellen (z. B. Kategorie
 Belletristik → Science-Fiction) – nur wo der alte Wert noch unverändert ist.
 

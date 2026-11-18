@@ -37,6 +37,7 @@
 <div class="bar"><div class="bar-in">
   <input type="search" id="q" placeholder="Titel, Autor, Tag, Klappentext, Notiz …" aria-label="Suche">
   <select id="st" aria-label="Status"></select>
+  <select id="ge" aria-label="Genre"></select>
   <select id="lang" aria-label="Sprache"></select>
   <select id="fmt" aria-label="Format"><option value="">Alle Formate</option><option value="bb">Gedruckt</option><option value="kd">Auf Kindle</option><option value="ko">Nur Kindle</option><option value="lend">Verliehen</option></select>
   <select id="sort" aria-label="Sortierung">
@@ -59,17 +60,16 @@
 <!-- Themenlandkarte -->
 <section id="mapView">
   <div class="mapbar">
+    <div class="seg" id="mapModes" role="tablist">
+      <button class="btn" data-mode="themen">Themen</button><button class="btn" data-mode="autoren">Autoren</button><button class="btn" data-mode="uebersicht">Übersicht</button>
+    </div>
     <input type="search" id="mq" list="nodeList" placeholder="Thema, Autor oder Kategorie finden …" aria-label="Knoten suchen">
     <datalist id="nodeList"></datalist>
   </div>
-  <div class="legend">
-    <label><input type="checkbox" data-k="c" checked><span class="dot" style="background:#7b3f35"></span>Kategorien</label>
-    <label><input type="checkbox" data-k="t" checked><span class="dot" style="background:var(--card);border:2px solid var(--accent)"></span>Themen (Tags, inkl. Vorschläge)</label>
-    <label><input type="checkbox" data-k="a" checked><span class="dot" style="background:var(--ink)"></span>Autoren (ab 4 Büchern)</label>
-  </div>
+  <div class="legend" id="mapLegend"></div>
   <div id="svgWrap"><svg id="svg"></svg>
     <div class="zoomb"><button class="btn" id="zin" aria-label="Vergrößern">+</button><button class="btn" id="zout" aria-label="Verkleinern">−</button><button class="btn" id="zfit" aria-label="Alles zeigen">⤢</button></div>
-    <div class="hint">Ziehen zum Verschieben · Zoomen mit zwei Fingern oder Mausrad · Knoten antippen</div>
+    <div class="hint" id="mapHint"></div>
   </div>
   <div id="panel"></div>
 </section>

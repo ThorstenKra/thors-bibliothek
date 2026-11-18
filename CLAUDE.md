@@ -39,7 +39,7 @@ Lies vor jeder Arbeit `docs/ROADMAP.md` (offene Aufgaben) und bei Bedarf `docs/P
   "beschreibung":"…","felder":{ "<id>": { "<feld>": <wert> } }}` – füllt nur leere Felder
   (auch leere Listen und Kategorie „Ohne Kategorie“). Für Änderungen an bereits gefüllten Feldern den Abschnitt
   `aendern` nutzen (`{ id: { feld: { "von": alt, "nach": neu } } }`, greift nur bei unverändertem Wert).
-- Kategorien: die 16 Kategorien aus `js/app.js` (`PALETTE`); Themen-Vokabular siehe `docs/PROJEKT.md`.
+- Kategorien: die 16 Kategorien aus `js/app.js` (`PALETTE`); Genres: `GENRES` in `js/app.js`; Themen-Vokabular siehe `docs/PROJEKT.md`.
 - Werkzeuge der Erstübernahme liegen in `tools/` (Python, nur noch für Sonderfälle).
 
 ## Commits

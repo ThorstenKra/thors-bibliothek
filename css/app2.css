@@ -67,3 +67,18 @@ details.pruef>summary{cursor:pointer;padding:4px 0}
 .pg{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
 .lnk{font:inherit;background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-align:left}
 .btn.sm{padding:3px 8px;font-size:12px;margin-left:6px}
+
+/* Landkarte: Ansichten */
+.seg{display:flex;gap:0}
+.seg .btn{border-radius:0;margin-left:-1px}
+.seg .btn:first-child{border-radius:10px 0 0 10px;margin-left:0}
+.seg .btn:last-child{border-radius:0 10px 10px 0}
+.hull{fill-opacity:.09;stroke-opacity:.35;stroke-width:1.5}
+.hlabel{font:700 15px Fraunces,Georgia,serif;paint-order:stroke;stroke:var(--card);stroke-width:4px;stroke-linejoin:round}
+.link.co{stroke:var(--ink);stroke-opacity:.5;stroke-dasharray:4 3}
+.lco{display:inline-block;width:18px;border-top:2px dashed var(--ink);vertical-align:middle;margin-right:4px}
+.node.fade,.link.fade{opacity:.15}
+.tmcat{font:600 12px Inter,system-ui,sans-serif;fill:#fff}
+.tmleaf{font:11px Inter,system-ui,sans-serif;fill:var(--ink);pointer-events:none}
+.tmleaf .tmn{fill:var(--muted)}
+.tl:hover rect{fill-opacity:1}

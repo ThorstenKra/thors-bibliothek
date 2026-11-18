@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -11,6 +11,11 @@ const PALETTE = {
   "Biografie":"#7a6a4a","Literaturwissenschaft":"#5a3a3a","Technik & Informatik":"#3a4a6a","Sonstiges":"#6b6560","Ohne Kategorie":"#85807a"
 };
 const CATEGORIES = Object.keys(PALETTE);
+// Genre = Gattung bzw. Spielart (vor allem Belletristik); Themen bleiben in den Tags
+const GENRES = ['Roman','Erzählungen','Lyrik','Drama','Science-Fiction','Fantasy & Phantastik','Krimi & Thriller','Horror',
+  'Märchen & Fabeln','Epos & Sage','Kinder- & Jugendbuch','Essays & Aphorismen','Erinnerungen, Briefe & Tagebücher','Werkausgabe','Anthologie'];
+// Tags, die eine Gattung oder Kategorie bezeichnen – auf der Landkarte keine Themen
+const GENRE_TAGS = ['Belletristik','Science Fiction','Lyrik','Anthologie'];
 const STATUS = ['Ungelesen', 'Lese ich', 'Gelesen', 'Abgebrochen', 'Wunschliste'];
 const shade = (hex, k) => { const n=parseInt(hex.slice(1),16); const r=n>>16,g=n>>8&255,b=n&255; return `rgb(${Math.round(r*k)},${Math.round(g*k)},${Math.round(b*k)})`; };
 const hash = s => { let h=0; for (const c of String(s)) h=(h*31+c.charCodeAt(0))|0; return Math.abs(h); };
@@ -30,12 +35,12 @@ function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('sho
 
 // ---------- Zustand ----------
 let ALL = [], B = [], REGELN = {}, mapDirty = true;
-const state = { fmt:'', sug:true, q:'', author:'', cat:'', st:'', lang:'', tag:'', sort:'added', view: LS('bb_view')||'grid', limit:60 };
+const state = { fmt:'', sug:true, q:'', author:'', ge:'', cat:'', st:'', lang:'', tag:'', sort:'added', view: LS('bb_view')||'grid', limit:60 };
 
 async function load(){
   ALL = await Data.allBooks();
   B = ALL.filter(b=>!b.del);
-  B.forEach(b=>{ b.hay = words([b.t,b.s,b.a,b.ue,b.p,(b.tg||[]).join(' '),(b.ts||[]).join(' '),(b.tt||[]).join(' '),b.su,b.n,(b.kn||[]).join(' '),b.i,b.loc,b.lendTo].join(' ')); b.pers = persons(b.a); });
+  B.forEach(b=>{ b.hay = words([b.t,b.s,b.a,b.ue,b.ge,b.p,(b.tg||[]).join(' '),(b.ts||[]).join(' '),(b.tt||[]).join(' '),b.su,b.n,(b.kn||[]).join(' '),b.i,b.loc,b.lendTo].join(' ')); b.pers = persons(b.a); });
   REGELN = await Data.getMeta('regeln', {});
   mapDirty = true;
 }
@@ -65,6 +70,9 @@ function drawFilters(){
   const lc = {}; B.forEach(b=>{ if(b.l) lc[b.l]=(lc[b.l]||0)+1; });
   $('lang').innerHTML = '<option value="">Alle Sprachen</option>' + Object.entries(lc).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`<option value="${esc(l)}">${esc(l)} (${n})</option>`).join('');
   $('lang').value = state.lang;
+  const gc = {}; B.forEach(b=>{ if (b.ge && (!state.cat || b.c===state.cat)) gc[b.ge]=(gc[b.ge]||0)+1; });
+  $('ge').innerHTML = '<option value="">Alle Genres</option>' + GENRES.filter(g=>gc[g]).map(g=>`<option value="${esc(g)}">${esc(g)} (${gc[g]})</option>`).join('');
+  $('ge').value = gc[state.ge] ? state.ge : (state.ge='');
   $('st').innerHTML = '<option value="">Alle Status</option>' + STATUS.map(s=>`<option>${s}</option>`).join('');
   $('st').value = state.st;
 }
@@ -85,7 +93,7 @@ function filtered(){
   // Suchbegriff passt am Wortanfang („icke“ findet nicht „Dickens“); mit * davor überall im Wort („*krieg“)
   const terms = norm(state.q).split(/\s+/).filter(Boolean).map(t => t.startsWith('*') ? norm(t.slice(1)).replace(/[^\p{L}\p{N}]+/gu,' ') : ' ' + t.replace(/[^\p{L}\p{N}]+/gu,' ').trim()).filter(t=>t.trim());
   let r = B.filter(b =>
-    (!state.author || b.pers.includes(state.author)) &&
+    (!state.author || b.pers.includes(state.author)) && (!state.ge || b.ge===state.ge) &&
     (!state.cat || b.c===state.cat) &&
     (!state.fmt || (state.fmt==='bb'&&b.fm!=='Kindle') || (state.fmt==='kd'&&b.kd) || (state.fmt==='ko'&&b.fm==='Kindle') || (state.fmt==='lend'&&b.lendTo)) &&
     (!state.st || b.st===state.st) && (!state.lang || b.l===state.lang) &&
@@ -125,6 +133,7 @@ function render(){
 $('out').onclick = e => { const t=e.target.closest('.book'); if(t) openBook(B.find(b=>b.id===t.dataset.id)); };
 let qto; $('q').oninput = ()=>{ clearTimeout(qto); qto=setTimeout(()=>{ state.q=$('q').value; state.limit=60; render(); },150); };
 $('st').onchange = e=>{ state.st=e.target.value; state.limit=60; render(); };
+$('ge').onchange = e=>{ state.ge=e.target.value; state.limit=60; render(); };
 $('lang').onchange = e=>{ state.lang=e.target.value; state.limit=60; render(); };
 $('fmt').onchange = e=>{ state.fmt=e.target.value; state.limit=60; render(); };
 $('sort').onchange = e=>{ state.sort=e.target.value; state.limit=60; render(); };
@@ -132,8 +141,11 @@ const setView = v => { state.view=v; LS('bb_view',v); $('vGrid').classList.toggl
 $('vGrid').onclick=()=>setView('grid'); $('vList').onclick=()=>setView('list');
 
 function showInCatalog(n){
-  Object.assign(state,{q:'',author:'',cat:'',tag:'',st:'',lang:'',fmt:'',sug:true,limit:60}); $('q').value=''; $('fmt').value='';
-  if (n.k==='c') state.cat=n.n; else if (n.k==='t') state.tag=n.n; else state.author=n.n;
+  Object.assign(state,{q:'',author:'',ge:'',cat:'',tag:'',st:'',lang:'',fmt:'',sug:true,limit:60}); $('q').value=''; $('fmt').value='';
+  if (n.k==='c') state.cat=n.n;
+  else if (n.k==='g') { state.ge=n.n; if (n.c) state.cat=n.c; }
+  else if (n.k==='t') { state.tag=n.n; if (n.c) state.cat=n.c; }
+  else state.author=n.n;
   drawFilters(); render(); location.hash='katalog'; scrollTo({top:0});
 }
 
@@ -151,6 +163,7 @@ function openBook(b){
     ['Standort',esc(b.loc)],
     ['Bewertung',b.r?`<span class="stars">${stars(b.r)}</span>`:''],
     ['Kategorie',esc(b.c)+(b.g&&b.g!==b.c?` <span class="mut">(${esc(b.g)})</span>`:'')],
+    ['Genre',b.ge?`<button class="lnk" data-genre="${esc(b.ge)}">${esc(b.ge)}</button>`:''],
     ['Verlag',esc(b.p)],['Jahr',esc(b.y)],['Seiten',esc(b.pg)],['Sprache',esc(b.l)],['ISBN',esc(b.i)],
     ['Begonnen',fmtDate(b.ds)],['Beendet',fmtDate(b.df)],['Auf Kindle beendet',b.kdf&&b.kdf!==b.df?fmtDate(b.kdf):''],
     ['Kindle-Markierungen',b.km?`${b.km} <span class="mut">(Text nicht im Export)</span>`:''],['Hinzugefügt',fmtDate(b.da)]].filter(x=>x[1]);
@@ -180,6 +193,7 @@ dlg.onclick = async e => {
   if (s) { await saveBook(b, {...b, st:s.dataset.st, ...(s.dataset.st==='Gelesen'&&!b.df?{df:Data.today()}:{}), ...(s.dataset.st==='Lese ich'&&!b.ds?{ds:Data.today()}:{})}); toast(`Status: ${s.dataset.st}`); return openBook(B.find(x=>x.id===b.id)); }
   const ka = e.target.closest('#kApp');
   if (ka) { e.preventDefault(); try { await navigator.clipboard.writeText(b.t); toast('Titel kopiert – in der Kindle-App in die Suche einfügen'); } catch(err) {} setTimeout(()=>{ location.href = ka.getAttribute('href'); }, 600); return; }
+  const gn = e.target.closest('[data-genre]'); if (gn){ Object.assign(state,{q:'',author:'',tag:'',cat:b.c,ge:gn.dataset.genre,limit:60}); $('q').value=''; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); return; }
   const tg = e.target.closest('[data-tag]'); if (tg){ state.tag=tg.dataset.tag; state.limit=60; dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
   const au = e.target.closest('[data-author]'); if (au){ Object.assign(state,{q:'',author:au.dataset.author,cat:'',tag:'',limit:60}); $('q').value=''; drawFilters(); dlg.close(); render(); location.hash='katalog'; scrollTo({top:0}); }
 };
@@ -188,7 +202,7 @@ dlg.onclick = async e => {
 const FIELDS = [
   ['t','Titel','text',true],['s','Untertitel','text'],['a','Autor(en)','text',true],['ue','Übersetzer/Herausgeber','text'],['p','Verlag','text'],
   ['y','Erscheinungsjahr','text'],['i','ISBN','text'],['pg','Seiten','text'],['l','Sprache','text'],
-  ['c','Kategorie','cat'],['st','Status','status'],['r','Bewertung','rating'],['fmt','Format','format'],
+  ['c','Kategorie','cat'],['ge','Genre','genre'],['st','Status','status'],['r','Bewertung','rating'],['fmt','Format','format'],
   ['ds','Begonnen','date'],['df','Beendet','date'],['da','Hinzugefügt','date'],['loc','Standort (Regal)','text'],
   ['lendTo','Verliehen an','text'],['lendSince','Verliehen seit','date'],
   ['cv','Cover','cover'],['ka','Kindle-ASIN','text'],['tg','Tags (mit Komma getrennt)','list'],['tt','Inhaltliche Themen','list'],['su','Klappentext','area'],['n','Notizen','area'],
@@ -202,6 +216,7 @@ function editBook(b, prefill){
     const val = Array.isArray(v[k]) ? v[k].join(', ') : (v[k]??'');
     let el;
     if (type==='cat') el = `<select name="${k}">${[...new Set([...CATEGORIES, v.c].filter(Boolean))].map(c=>`<option ${c===v.c?'selected':''}>${esc(c)}</option>`).join('')}</select>`;
+    else if (type==='genre') el = `<select name="${k}"><option value="">–</option>${[...new Set([...GENRES, v.ge].filter(Boolean))].map(g=>`<option ${g===v.ge?'selected':''}>${esc(g)}</option>`).join('')}</select>`;
     else if (type==='status') el = `<select name="${k}">${STATUS.map(s=>`<option ${s===v.st?'selected':''}>${s}</option>`).join('')}</select>`;
     else if (type==='rating') el = `<select name="${k}">${[0,1,2,3,4,5].map(n=>`<option value="${n}" ${n===(v.r||0)?'selected':''}>${n?'★'.repeat(n):'keine'}</option>`).join('')}</select>`;
     else if (type==='format') el = `<select name="fmt"><option value="buch" ${v.fmt==='buch'?'selected':''}>Gedruckt</option><option value="beides" ${v.fmt==='beides'?'selected':''}>Gedruckt + Kindle</option><option value="kindle" ${v.fmt==='kindle'?'selected':''}>Nur Kindle</option></select>`;
@@ -259,7 +274,7 @@ function shrinkImage(file){
 }
 async function saveBook(old, n){
   n = {...n}; delete n.hay; delete n.pers; delete n.fmt;
-  ['fm','kd','lendTo','lendSince','loc','stk','ue'].forEach(k=>{ if(!n[k]) delete n[k]; });
+  ['fm','kd','lendTo','lendSince','loc','stk','ue','ge'].forEach(k=>{ if(!n[k]) delete n[k]; });
   n.u = Data.now();
   if (old && n.st!==old.st) delete n.stk;
   await Data.putBooks([n]);
@@ -328,6 +343,7 @@ async function lookupAndEdit(isbn){
   addDlg.close(); editBook(null, pre);
 }
 $('addBtn').onclick = openAdd;
+$('mapModes').onclick = e => { const b = e.target.closest('[data-mode]'); if (!b) return; mapMode = b.dataset.mode; LS('bb_mapmode', mapMode); buildMap(); };
 $('pruefBtn').onclick = ()=>{ $('pruefBtn').textContent = 'Erneut prüfen'; buildPruefung(); };
 
 // ---------- Historie ----------
@@ -453,7 +469,7 @@ async function applyKindlePlan(){
 function refreshViews(){
   drawHeader(); drawFilters(); render();
   const h = location.hash;
-  if (h==='#landkarte') { buildMap(computeGraph(B, REGELN.karte_ausgeblendete_tags)); mapDirty=false; }
+  if (h==='#landkarte') { buildMap(); mapDirty=false; }
   if (h==='#historie') buildHist();
   if (h==='#daten') { buildData(); if ($('pruefOut').innerHTML) buildPruefung(); }
 }
@@ -462,7 +478,7 @@ async function route(){
   const h = init ? (location.hash||'#katalog') : '#welcome';
   document.body.className = {'#landkarte':'map','#historie':'hist','#daten':'data','#welcome':'welcome'}[h] || '';
   [['tKat','#katalog'],['tMap','#landkarte'],['tHist','#historie'],['tData','#daten']].forEach(([id,x])=>$(id).classList.toggle('on', h===x || (x==='#katalog' && !['#landkarte','#historie','#daten','#welcome'].includes(h))));
-  if (h==='#landkarte' && mapDirty) { buildMap(computeGraph(B, REGELN.karte_ausgeblendete_tags)); mapDirty=false; }
+  if (h==='#landkarte' && mapDirty) { buildMap(); mapDirty=false; }
   if (h==='#historie') buildHist();
   if (h==='#daten') buildData();
 }
