@@ -1,0 +1,4 @@
+bibliothek-*.json
+bibliothek-*.csv
+*.zip
+.DS_Store

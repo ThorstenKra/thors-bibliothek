@@ -1,0 +1,45 @@
+/* Ergänzungen für die eigenständige App */
+body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)}
+header{padding-top:calc(20px + env(safe-area-inset-top))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.btn.add{font-weight:600;background:var(--accent);color:#fff;border-color:var(--accent);padding:10px 16px;border-radius:999px}
+.btn.danger{color:#b3261e;border-color:#b3261e}
+.mut{color:var(--muted)}
+.banner{margin-top:12px;background:color-mix(in srgb,var(--accent) 12%,var(--card));border:1px solid var(--accent);border-radius:12px;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:14px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+.filebtn{display:inline-block;cursor:pointer}
+.hint2{color:var(--muted);font-size:13px}
+#dataView,#welcome{display:none;max-width:760px;margin:0 auto;padding:10px 18px 40px}
+body.data #dataView,body.welcome #welcome{display:block}
+body.data .bar,body.data #cats,body.data #info,body.data main,
+body.welcome .bar,body.welcome #cats,body.welcome #info,body.welcome main,body.welcome .tabs,body.welcome .stats{display:none}
+.panelbox{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:14px}
+.panelbox h2{font-family:Fraunces,Georgia,serif;margin:0 0 6px;font-size:20px}
+.panelbox p{margin:8px 0}
+/* Bearbeiten */
+#edit,#addDlg{max-width:760px}
+#editForm{margin:0;display:flex;flex-direction:column;max-height:88vh}
+.eh{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.eh h2{font-family:Fraunces,Georgia,serif;margin:0;font-size:22px}
+.eb{padding:14px 20px;overflow:auto}
+.ef{padding:12px 20px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;justify-content:flex-end}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+@media (max-width:560px){.fgrid{grid-template-columns:1fr}}
+.fl{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.fl.wide{grid-column:1/-1}
+.fl input,.fl select,.fl textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+.fl textarea{resize:vertical}
+/* Scanner */
+#addBody{padding:0 0 18px}
+#addBody>*:not(.eh){margin-left:20px;margin-right:20px}
+.scanbox{display:none;position:relative;margin-top:14px;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3}
+.scanbox.on{display:block}
+.scanbox video{width:100%;height:100%;object-fit:cover}
+.scanline{position:absolute;left:10%;right:10%;top:50%;height:2px;background:#e33;box-shadow:0 0 8px #e33}
+#addBody .btnrow{margin-top:14px}
+/* Meldung */
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,40px);opacity:0;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;transition:.25s;z-index:50;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+/* größere Bedienflächen auf Touch-Geräten */
+@media (pointer:coarse){.btn,.chip,select,input[type=search]{min-height:40px}}
+.fl select{max-width:none}

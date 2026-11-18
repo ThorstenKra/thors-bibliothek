@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thors Bibliothek</title>
+<meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1a18" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bibliothek">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app2.css">
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Thors Bibliothek</h1>
+    <button class="btn add" id="addBtn" aria-label="Buch hinzufügen">＋ Buch</button>
+  </div>
+  <p class="sub" id="subline"></p>
+  <div id="backupBanner"></div>
+  <div class="stats" id="stats"></div>
+  <nav class="tabs">
+    <a class="tab" id="tKat" href="#katalog">Katalog</a>
+    <a class="tab" id="tMap" href="#landkarte">Themenlandkarte</a>
+    <a class="tab" id="tHist" href="#historie">Historie</a>
+    <a class="tab" id="tData" href="#daten">Daten</a>
+  </nav>
+</header>
+
+<!-- Katalog -->
+<div class="bar"><div class="bar-in">
+  <input type="search" id="q" placeholder="Titel, Autor, Tag, Klappentext, Notiz …" aria-label="Suche">
+  <select id="st" aria-label="Status"></select>
+  <select id="lang" aria-label="Sprache"></select>
+  <select id="fmt" aria-label="Format"><option value="">Alle Formate</option><option value="bb">Gedruckt</option><option value="kd">Auf Kindle</option><option value="ko">Nur Kindle</option><option value="lend">Verliehen</option></select>
+  <select id="sort" aria-label="Sortierung">
+    <option value="added">Zuletzt hinzugefügt</option>
+    <option value="title">Titel A–Z</option>
+    <option value="author">Autor A–Z</option>
+    <option value="year">Erscheinungsjahr</option>
+    <option value="rating">Bewertung</option>
+    <option value="finished">Zuletzt gelesen</option>
+    <option value="pages">Seitenzahl</option>
+    <option value="edited">Zuletzt bearbeitet</option>
+  </select>
+  <button class="btn on" id="vGrid" aria-label="Kachelansicht">▦</button>
+  <button class="btn" id="vList" aria-label="Listenansicht">☰</button>
+</div></div>
+<div class="chips" id="cats"></div>
+<div class="info" id="info"></div>
+<main id="out"></main>
+
+<!-- Themenlandkarte -->
+<section id="mapView">
+  <div class="mapbar">
+    <input type="search" id="mq" list="nodeList" placeholder="Thema, Autor oder Kategorie finden …" aria-label="Knoten suchen">
+    <datalist id="nodeList"></datalist>
+  </div>
+  <div class="legend">
+    <label><input type="checkbox" data-k="c" checked><span class="dot" style="background:#7b3f35"></span>Kategorien</label>
+    <label><input type="checkbox" data-k="t" checked><span class="dot" style="background:var(--card);border:2px solid var(--accent)"></span>Themen (Tags, inkl. Vorschläge)</label>
+    <label><input type="checkbox" data-k="a" checked><span class="dot" style="background:var(--ink)"></span>Autoren (ab 4 Büchern)</label>
+  </div>
+  <div id="svgWrap"><svg id="svg"></svg>
+    <div class="zoomb"><button class="btn" id="zin" aria-label="Vergrößern">+</button><button class="btn" id="zout" aria-label="Verkleinern">−</button><button class="btn" id="zfit" aria-label="Alles zeigen">⤢</button></div>
+    <div class="hint">Ziehen zum Verschieben · Zoomen mit zwei Fingern oder Mausrad · Knoten antippen</div>
+  </div>
+  <div id="panel"></div>
+</section>
+
+<!-- Historie -->
+<section id="histView">
+  <h3 style="margin-top:18px">Änderungsprotokoll</h3>
+  <ul class="log" id="hLog"></ul>
+  <h3>Alle Änderungen an Büchern</h3>
+  <div class="mapbar"><input type="search" id="hq" placeholder="Titel, Autor oder Änderung …"><select id="ht"><option value="">Alle Arten</option></select></div>
+  <div class="info" style="padding:0 0 8px" id="hCount"></div>
+  <table class="htab"><colgroup><col style="width:24%"><col style="width:40%"><col><col class="hide-s" style="width:90px"></colgroup><thead><tr><th>Art</th><th>Buch</th><th>Änderung</th><th class="hide-s">Datum</th></tr></thead><tbody id="hBody"></tbody></table>
+  <button class="btn more" id="hMore">Weitere anzeigen</button>
+</section>
+
+<!-- Daten -->
+<section id="dataView">
+  <div class="panelbox">
+    <h2>Sicherung</h2>
+    <p id="backupState"></p>
+    <div class="btnrow">
+      <button class="btn on" id="expJson">Sicherung erstellen (JSON)</button>
+      <button class="btn" id="expCsv">Tabelle exportieren (CSV)</button>
+    </div>
+    <p class="hint2">Auf iPad und iPhone öffnet sich das Teilen-Menü: <b>„In Dateien sichern“ → iCloud Drive</b>. Am besten immer in denselben Ordner, z. B. <i>iCloud Drive › Bibliothek</i>.</p>
+  </div>
+  <div class="panelbox">
+    <h2>Sicherung laden</h2>
+    <p>Führt eine Sicherungsdatei mit den Daten auf diesem Gerät zusammen. Pro Buch gilt der neuere Stand. So hältst du iPad, iPhone und Desktop über iCloud Drive auf demselben Stand.</p>
+    <div class="btnrow">
+      <label class="btn on filebtn">Sicherung zusammenführen<input type="file" id="impMerge" accept=".json,application/json" hidden></label>
+      <label class="btn filebtn">Alles ersetzen …<input type="file" id="impReplace" accept=".json,application/json" hidden></label>
+    </div>
+    <p id="impResult"></p>
+  </div>
+  <div class="panelbox">
+    <h2>Auf diesem Gerät</h2>
+    <p id="storageInfo"></p>
+  </div>
+  <div class="panelbox">
+    <h2>Über die App</h2>
+    <p>Thors Bibliothek läuft vollständig auf deinem Gerät – offline und ohne Claude. Internet wird nur für das Nachschlagen von ISBN-Nummern gebraucht. Das Datenformat ist offen dokumentiert (README im GitHub-Repository).</p>
+    <p class="hint2" id="version"></p>
+  </div>
+</section>
+
+<!-- Erststart -->
+<section id="welcome">
+  <div class="panelbox">
+    <h2>Willkommen</h2>
+    <p>Auf diesem Gerät ist noch keine Bibliothek gespeichert. Lade deine Sicherungsdatei (z. B. <i>bibliothek-start.json</i> aus iCloud Drive), um loszulegen.</p>
+    <label class="btn on filebtn">Sicherungsdatei laden<input type="file" id="impFirst" accept=".json,application/json" hidden></label>
+    <p id="firstResult"></p>
+    <p class="hint2">Oder <a href="#" id="startEmpty">mit einer leeren Bibliothek beginnen</a>.</p>
+  </div>
+</section>
+
+<!-- Dialoge -->
+<dialog id="dlg"><div class="dh" id="dh"></div><div class="db" id="db"></div></dialog>
+<dialog id="edit"><form id="editForm" method="dialog"></form></dialog>
+<dialog id="addDlg"><div class="db" id="addBody"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="vendor/d3.min.js"></script>
+<script src="vendor/zxing.min.js" defer></script>
+<script src="js/data.js"></script>
+<script src="js/isbn.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
