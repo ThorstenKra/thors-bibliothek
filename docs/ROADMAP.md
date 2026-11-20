@@ -43,6 +43,7 @@ Stand: 18.11.2026. Bei jeder Arbeit aktualisieren.
 - [ ] Artefakt-Katalog bei Claude als Archiv kennzeichnen oder löschen.
 
 ## Erledigt
+- [x] 20.11.: Internet nur auf Anweisung (1.8.0)
 - [x] 18.11.: Autorenansicht mit weiteren Werken aus Open Library (1.7.0) – Live-Abfrage auf dem iPad prüfen lassen
 - [x] 18.11.: Barcode-Scan repariert, Ersatzweg „Foto vom Barcode“ (1.6.1) – auf dem iPad noch bestätigen lassen
 - [x] 18.11.: Genre als eigenes Feld, Landkarte mit drei Ansichten (1.6.0)

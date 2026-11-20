@@ -16,6 +16,7 @@ Projektdokumentation: [Projekt](docs/PROJEKT.md) · [Änderungen](docs/CHANGELOG
   Wortanfang („icke“ findet nicht „Dickens“); mit `*` davor überall im Wort („*krieg“ findet „Weltkrieg“)
 - Autorenansicht: gelesen / noch nicht gelesen / Wunschliste, darunter weitere Werke des Autors aus
   Open Library (deutsche Ausgaben zuerst), mit „＋ Wunschliste“; braucht Internet, Ergebnis 30 Tage gespeichert
+- Internet nur auf Anweisung (Standard): Cover, Nachschlagen und Updates nur über Knöpfe mit 🌐
 - Datenprüfung (Daten-Ansicht): Namensvarianten vereinheitlichen, Übersetzer aus dem Autorfeld lösen,
   mögliche Dubletten, Kategorie-Ausreißer, fehlende Angaben
 - Bücher hinzufügen: Barcode-Scan mit der Kamera, ISBN nachschlagen (Google Books, Open Library),

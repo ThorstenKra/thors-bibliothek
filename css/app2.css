@@ -90,3 +90,7 @@ details.pruef>summary{cursor:pointer;padding:4px 0}
 .work .rr a{font-size:12px}
 details.wother{margin-top:12px}
 details.wother>summary{cursor:pointer;color:var(--muted);font-size:13px;margin-bottom:8px}
+
+/* Internet */
+.chk{display:flex;gap:8px;align-items:center;cursor:pointer}
+#cvNet{position:absolute;right:14px;bottom:14px;background:rgba(255,255,255,.85)}

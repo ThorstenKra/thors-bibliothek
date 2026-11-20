@@ -1,5 +1,14 @@
 # Änderungsprotokoll
 
+## 1.8.0 – 20.11.2026
+- **Internet nur auf Anweisung** (Daten → Internet, standardmäßig an): Die App ruft nichts mehr von
+  selbst ab. Cover, die noch nicht auf dem Gerät liegen, zeigen den Farbumschlag; der Service Worker
+  liefert die App aus dem Zwischenspeicher. Ins Netz geht es nur über Knöpfe mit 🌐:
+  „Online nachschlagen“ nach dem Scan, „Weitere Werke in Open Library suchen“, „Cover laden“
+  (Buchansicht), „Fehlende Cover laden“ (Daten) sowie „Nach Update suchen“.
+- Ausgeschaltet verhält sich die App wie bisher (Cover und Updates automatisch).
+- Service Worker lädt bei der Installation frische Dateien (`cache: 'reload'`).
+
 ## 1.7.0 – 18.11.2026
 - **Autorenansicht** (Filter „Autor: …“): Bücher getrennt nach „Gelesen“, „Noch nicht gelesen“ und
   „Auf der Wunschliste“, darunter **weitere Werke des Autors** aus Open Library – zuerst Werke mit

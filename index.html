@@ -119,12 +119,19 @@
     <div id="pruefOut"></div>
   </div>
   <div class="panelbox">
+    <h2>Internet</h2>
+    <label class="chk"><input type="checkbox" id="netzManuell"> <b>Internet nur auf Anweisung</b></label>
+    <p class="hint2" id="netzInfo"></p>
+    <div class="btnrow"><button class="btn" id="coverLaden">🌐 Fehlende Cover laden</button></div>
+    <p class="hint2" id="coverInfo"></p>
+  </div>
+  <div class="panelbox">
     <h2>Auf diesem Gerät</h2>
     <p id="storageInfo"></p>
   </div>
   <div class="panelbox">
     <h2>Über die App</h2>
-    <p>Thors Bibliothek läuft vollständig auf deinem Gerät – offline und ohne Claude. Internet wird nur für das Nachschlagen von ISBN-Nummern gebraucht. Das Datenformat ist offen dokumentiert (README im GitHub-Repository).</p>
+    <p>Thors Bibliothek läuft vollständig auf deinem Gerät – offline und ohne Claude. Internet braucht sie nur zum Nachschlagen (ISBN, weitere Werke eines Autors), für Cover-Bilder und für Updates – im Modus „nur auf Anweisung“ ausschließlich, wenn du einen 🌐-Knopf tippst. Das Datenformat ist offen dokumentiert (README im GitHub-Repository).</p>
     <p class="hint2" id="version"></p>
     <button class="btn" id="updBtn">Nach Update suchen</button>
   </div>
@@ -155,6 +162,7 @@
 <script src="js/map.js"></script>
 <script src="js/kindle.js"></script>
 <script src="js/pruefung.js"></script>
+<script src="js/netz.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

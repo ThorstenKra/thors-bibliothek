@@ -52,6 +52,12 @@ ist aber für den Betrieb nicht nötig.
   `decodeFromConstraints` (erkannte nichts). Test in der Sandbox: Chrome mit
   `--use-file-for-fake-video-capture` und einem erzeugten EAN-13-Bild.
 
+- **Internet nur auf Anweisung** (1.8.0, Standard): Einstellung in `localStorage` (`bb_netz`) und für den
+  Service Worker im Cache `thors-bibliothek-einstellungen` (`./__netz`). Im Modus „manuell“ beantwortet der
+  Worker fehlende Cover mit 404 und liefert App-Dateien cache-first; ausdrückliche Abrufe laufen über
+  `Netz.ladeCover` (fetch aus der Seite, `no-cors`, landet im Cover-Cache) bzw. `ISBN.*`. Prüfen per CDP:
+  im manuellen Modus keine Netzabrufe des Workers, Cover-Anfragen als „SW-Antwort 404“.
+
 ## Bekannte Grenzen
 - Markierungstexte sind im Amazon-Export nicht enthalten (Abhilfe: My Clippings.txt, Kindle-Notizbuch).
 - Google Books liefert für manche Bücher ein graues „kein Bild“-Cover.

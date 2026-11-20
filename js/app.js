@@ -1,6 +1,6 @@
 // Thors Bibliothek – Oberfläche. Läuft komplett im Browser, Daten in IndexedDB (siehe data.js).
 'use strict';
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.8.0';
 
 // ---------- Hilfsfunktionen ----------
 const $ = id => document.getElementById(id);
@@ -148,11 +148,18 @@ async function loadWorks(author, force){
   const box = () => $('moreWorks');
   const cache = await Data.getMeta('werke', {});
   let c = cache[author];
-  if (force || !c || (Date.now() - new Date(c.datum).getTime()) > 30*864e5) {
+  if (!force && !c && Netz.manuell) {
+    if (box() && state.author===author) { box().innerHTML = `<button class="btn" id="wSearch">🌐 Weitere Werke in Open Library suchen</button>`; $('wSearch').onclick = ()=>loadWorks(author, true); }
+    return;
+  }
+  if (force || !c || (!Netz.manuell && (Date.now() - new Date(c.datum).getTime()) > 30*864e5)) {
+    if (force && box()) box().innerHTML = '<p class="mut">Suche in Open Library …</p>';
     if (!navigator.onLine) { if (box()) box().innerHTML = `<p class="mut">Offline – weitere Werke lassen sich nur mit Internet nachschlagen.${c?' Zeige den Stand vom '+fmtDate(c.datum)+'.':''}</p>`; if (!c) return; }
     else {
       const list = await ISBN.authorWorks(author);
-      if (list) { c = { datum: Data.now(), liste: list }; cache[author] = c; await Data.setMeta('werke', cache); }
+      if (list) { c = { datum: Data.now(), liste: list }; cache[author] = c; await Data.setMeta('werke', cache);
+        // Vorschaubilder gleich mitladen – die Suche war ein ausdrücklicher Abruf
+        await Netz.ladeCover(list.filter(w=>w.cv).slice(0,40).map(w=>`https://covers.openlibrary.org/b/id/${w.cv}-S.jpg`)); }
       else if (!c) { if (box() && state.author===author) box().innerHTML = '<p class="mut">Open Library ist gerade nicht erreichbar. <button class="btn sm" id="wRetry">Erneut versuchen</button></p>'; const rt=$('wRetry'); if (rt) rt.onclick=()=>loadWorks(author,true); return; }
     }
   }
@@ -169,7 +176,7 @@ async function loadWorks(author, force){
   box().innerHTML = (de.length ? `<p class="hint2">Mit deutscher Ausgabe · ${de.length} Werke, sortiert nach Zahl der Ausgaben</p><div class="list">${shown.map(item).join('')}</div>` +
       (de.length>shown.length ? `<button class="btn more" id="wAll">Alle ${de.length} zeigen</button>` : '') : '<p class="mut">Keine weiteren Werke mit deutscher Ausgabe gefunden.</p>') +
     (other.length ? `<details class="wother"><summary>Nur in anderen Sprachen · ${other.length}</summary><div class="list">${other.slice(0,40).map(item).join('')}</div></details>` : '') +
-    `<p class="hint2">Quelle: Open Library, Stand ${fmtDate(c.datum)} · <button class="lnk" id="wReload">neu laden</button></p>`;
+    `<p class="hint2">Quelle: Open Library, Stand ${fmtDate(c.datum)} · <button class="lnk" id="wReload">🌐 neu laden</button></p>`;
   const a = $('wAll'); if (a) a.onclick = ()=>{ state.worksAll = true; loadWorks(author); };
   $('wReload').onclick = ()=>loadWorks(author, true);
   box()._works = c.liste;
@@ -181,6 +188,7 @@ async function addWish(btn){
   const mine = B.filter(b=>persons(b.a).includes(state.author)), top = k => Object.entries(mine.reduce((m,b)=>(b[k]&&(m[b[k]]=(m[b[k]]||0)+1),m),{})).sort((x,y)=>y[1]-x[1])[0];
   const n = { id: Data.newId(), t: w.t, a: state.author, y: w.y ? String(w.y) : '', i: w.i || '', st: 'Wunschliste', c: (top('c')||['Ohne Kategorie'])[0], l: w.de ? 'Deutsch' : '', tg: [], da: Data.today(),
     cv: w.cv ? `https://covers.openlibrary.org/b/id/${w.cv}-M.jpg` : '', n: 'Vorgeschlagen aus Open Library (' + w.key + ')' };
+  if (n.cv) await Netz.ladeCover([n.cv]);
   await saveBook(null, n); toast(`„${w.t}“ auf die Wunschliste gesetzt`);
 }
 let qto; $('q').oninput = ()=>{ clearTimeout(qto); qto=setTimeout(()=>{ state.q=$('q').value; state.limit=60; render(); },150); };
@@ -206,6 +214,7 @@ const dlg = $('dlg');
 function openBook(b){
   if (!b) return;
   $('dh').style.background = coverBg(b);
+  if (Netz.manuell && Netz.extern(b.cv)) Netz.hatCover(b.cv).then(da => { if (!da && $('dh') && !$('cvNet')) { $('dh').insertAdjacentHTML('beforeend', '<button class="btn sm" id="cvNet">🌐 Cover laden</button>'); $('cvNet').onclick = async ev => { ev.stopPropagation(); ev.target.disabled = true; await Netz.ladeCover([b.cv]); openBook(b); render(); }; } });
   $('dh').innerHTML = `<button class="x" aria-label="Schließen">✕</button>${b.cv?`<div class="dcover">${coverImg(b)}</div>`:''}
     <h2>${esc(b.t)}</h2>${b.s?`<div style="opacity:.9">${esc(b.s)}</div>`:''}<div style="margin-top:8px;opacity:.95">${esc(b.a)}</div>`;
   const f = [['Status',esc(b.st)+(b.stk?' <span class="mut">(aus Kindle übernommen)</span>':'')],
@@ -289,7 +298,7 @@ function editBook(b, prefill){
   const setCv = u => { cvIn.value = u; cvPrev.innerHTML = u ? `<img src="${esc(u)}" alt="" referrerpolicy="no-referrer">` : '<span class="mut">kein Cover</span>'; };
   $('cvFile').onchange = async e => { const f = e.target.files[0]; if (!f) return; setCv(await shrinkImage(f)); $('cvUrl').value=''; };
   $('cvClear').onclick = ()=>{ setCv(''); $('cvUrl').value=''; };
-  $('cvUrl').onchange = e => { const u = e.target.value.trim(); if (!u || /^https:\/\//.test(u)) setCv(u); else toast('Bitte eine https-Adresse angeben.'); };
+  $('cvUrl').onchange = async e => { const u = e.target.value.trim(); if (!u || /^https:\/\//.test(u)) { if (u) await Netz.ladeCover([u]); setCv(u); } else toast('Bitte eine https-Adresse angeben.'); };
   if (!isNew) $('eDel').onclick = async ()=>{
     if (!$('eDel').dataset.sure){ $('eDel').dataset.sure='1'; $('eDel').textContent='Wirklich löschen? Nochmal tippen'; return; }
     await saveBook(b, {...b, del:true}); $('edit').close(); toast('Buch gelöscht');
@@ -378,26 +387,33 @@ function openAdd(){
       else $('aMsg').textContent = 'Im Foto wurde kein ISBN-Barcode erkannt. Bitte näher und gerade fotografieren oder die ISBN eintippen.'; }
     catch (err) { $('aMsg').textContent = 'Foto konnte nicht gelesen werden: ' + err.message; }
   };
-  $('aLookup').onclick = ()=>handleIsbn($('aIsbn').value);
+  $('aLookup').onclick = ()=>handleIsbn($('aIsbn').value, true);
   $('aIsbn').onkeydown = e=>{ if (e.key==='Enter'){ e.preventDefault(); handleIsbn($('aIsbn').value); } };
   addDlg.showModal();
 }
-async function handleIsbn(raw){
+async function handleIsbn(raw, ausdruecklich){
   const isbn = ISBN.to13(raw);
   if (!isbn) { $('aMsg').textContent = 'Das ist keine gültige ISBN.'; return; }
   const dup = B.find(b=>b.i===isbn);
   if (dup) {
     $('aMsg').innerHTML = `Schon in der Bibliothek: <b>${esc(dup.t)}</b> – ${esc(dup.a)}. <button class="btn" id="aOpen">Öffnen</button> <button class="btn" id="aAnyway">Trotzdem neu anlegen</button>`;
     $('aOpen').onclick = ()=>{ addDlg.close(); openBook(dup); };
-    $('aAnyway').onclick = ()=>lookupAndEdit(isbn);
+    $('aAnyway').onclick = ()=>lookupAndEdit(isbn, true);
     return;
   }
-  lookupAndEdit(isbn);
+  if (Netz.manuell && !ausdruecklich) {
+    $('aMsg').innerHTML = `ISBN ${esc(isbn)} erkannt. <button class="btn on" id="aNet">🌐 Online nachschlagen</button> <button class="btn" id="aNoNet">Ohne Online-Daten anlegen</button>`;
+    $('aNet').onclick = ()=>lookupAndEdit(isbn, true);
+    $('aNoNet').onclick = ()=>{ addDlg.close(); editBook(null, { i: isbn }); };
+    return;
+  }
+  lookupAndEdit(isbn, true);
 }
 async function lookupAndEdit(isbn){
   $('aMsg').textContent = navigator.onLine ? 'Suche in Google Books und Open Library …' : 'Offline – Buchdaten können nicht nachgeschlagen werden.';
   const d = navigator.onLine ? await ISBN.lookup(isbn) : null;
   const pre = d || { i: isbn };
+  if (d && d.cv && Netz.extern(d.cv)) await Netz.ladeCover([d.cv]);
   if (d) {
     const gm = REGELN.genre_kategorien || {};
     for (const [cat, gs] of Object.entries(gm)) if (d.g && gs.some(g=>norm(d.g).startsWith(norm(g)))) { pre.c = cat; break; }
@@ -456,6 +472,23 @@ async function buildData(){
   $('kindleLast').textContent = kl ? `Letzter Kindle-Abgleich: ${fmtDate(kl)}` : 'Bisheriger Kindle-Stand: Übernahme vom 18.11.2026.';
 }
 $('expJson').onclick = backupJSON;
+async function drawNetz(){
+  $('netzManuell').checked = Netz.manuell;
+  $('netzInfo').innerHTML = Netz.manuell
+    ? 'Die App geht nur ins Internet, wenn du einen Knopf mit 🌐 tippst (ISBN nachschlagen, weitere Werke, Cover laden) oder „Nach Update suchen“. Fehlende Cover zeigen bis dahin den Farbumschlag. Links (Kindle, Amazon, Open Library) öffnest du ohnehin selbst.'
+    : 'Die App lädt Cover-Bilder und App-Updates beim Öffnen selbstständig und schlägt nach einem Scan sofort nach.';
+  const f = await Netz.fehlendeCover(B);
+  $('coverInfo').textContent = f.length ? `${f.length.toLocaleString('de-DE')} Cover sind noch nicht auf dem Gerät gespeichert.` : 'Alle Cover sind auf dem Gerät gespeichert.';
+  $('coverLaden').disabled = !f.length;
+}
+$('netzManuell').onchange = async e => { await Netz.set(e.target.checked); drawNetz(); toast(e.target.checked ? 'Internet nur noch auf Anweisung' : 'Internet wieder automatisch'); };
+$('coverLaden').onclick = async ()=>{
+  const f = await Netz.fehlendeCover(B); if (!f.length) return;
+  if (!navigator.onLine) return toast('Offline – keine Verbindung.');
+  $('coverLaden').disabled = true;
+  const ok = await Netz.ladeCover(f, (i,n)=>{ $('coverInfo').textContent = `Lade Cover ${i} von ${n} …`; });
+  toast(`${ok} von ${f.length} Covern geladen`); render(); drawNetz();
+};
 $('updBtn').onclick = async ()=>{
   toast('Suche nach Update …');
   try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch(e){}
@@ -545,11 +578,12 @@ async function route(){
   [['tKat','#katalog'],['tMap','#landkarte'],['tHist','#historie'],['tData','#daten']].forEach(([id,x])=>$(id).classList.toggle('on', h===x || (x==='#katalog' && !['#landkarte','#historie','#daten','#welcome'].includes(h))));
   if (h==='#landkarte' && mapDirty) { buildMap(); mapDirty=false; }
   if (h==='#historie') buildHist();
-  if (h==='#daten') buildData();
+  if (h==='#daten') { buildData(); drawNetz(); }
 }
 addEventListener('hashchange', route);
 
 (async function main(){
+  await Netz.init();
   await Data.persist();
   await load();
   setView(state.view); drawFilters(); render(); await drawHeader(); route();
